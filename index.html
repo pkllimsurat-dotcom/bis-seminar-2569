@@ -114,7 +114,9 @@
   .hint{font-size:12px;color:#7E8FA3;margin-top:5px;}
   .err-text{font-size:12px;color:var(--err);margin-top:5px;display:none;}
 
-  .choice-row{display:flex;gap:12px;margin-bottom:6px;}
+  .choice-row{display:flex;gap:12px;margin-bottom:6px;flex-wrap:wrap;}
+  .choice-row .choice-btn{min-width:140px;}
+  @media (max-width:560px){ .choice-row .choice-btn{flex:1 1 100%;} }
   .choice-btn{
     flex:1;border:1.5px solid var(--line);border-radius:10px;padding:14px;
     text-align:center;cursor:pointer;background:#F7FCFE;font-weight:500;font-size:14.5px;
@@ -342,7 +344,7 @@ const FOOD_OPTS = [
 
 function blankAttendee(){
   return { fullname:'', nickname:'', position:'', phone:'', email:'',
-           room:'single', food:[], allergyNote:'' };
+           room:'single', travel:'', food:[], allergyNote:'' };
 }
 let draft = blankAttendee();
 
@@ -483,6 +485,13 @@ function viewAttendees(){
       <div class="hint">กรณีเข้าสัมมนาท่านเดียวและเลือกห้องพักคู่ คณะกรรมการจะเป็นผู้จัดคู่ห้องพักให้</div>
     </div>
     <div class="field">
+      <label class="req">การเดินทาง</label>
+      <div class="choice-row">
+        <div class="choice-btn ${draft.travel==='bus'?'sel':''}" data-travel="bus">🚌 ร่วมเดินทางโดยรถบัสที่ชมรมฯ จัดให้</div>
+        <div class="choice-btn ${draft.travel==='own'?'sel':''}" data-travel="own">🚗 เดินทางโดยพาหนะส่วนตัว</div>
+      </div>
+    </div>
+    <div class="field">
       <label>ข้อมูลด้านอาหาร</label>
       <div class="food-grid">
         ${FOOD_OPTS.map(o=>`
@@ -505,7 +514,7 @@ function viewAttendees(){
       <div class="attendee-item">
         <div>
           <div class="ai-name">${escapeHtml(a.fullname)} ${a.nickname?`(${escapeHtml(a.nickname)})`:''}</div>
-          <div class="ai-meta">${escapeHtml(a.position)} · ${a.room==='single'?'พักเดี่ยว':'พักคู่'} · ${priceFor(isMember,a.room).toLocaleString()} บาท/ท่าน<br>${escapeHtml(a.phone)} · ${escapeHtml(a.email)}</div>
+          <div class="ai-meta">${escapeHtml(a.position)} · ${a.room==='single'?'พักเดี่ยว':'พักคู่'} · ${a.travel==='bus'?'รถบัสชมรมฯ':'พาหนะส่วนตัว'} · ${priceFor(isMember,a.room).toLocaleString()} บาท/ท่าน<br>${escapeHtml(a.phone)} · ${escapeHtml(a.email)}</div>
         </div>
         <div class="ai-actions">
           <span data-edit="${i}">แก้ไข</span>
@@ -543,6 +552,7 @@ function viewReview(){
           <div class="review-row"><span>ตำแหน่ง</span><span>${escapeHtml(a.position)}</span></div>
           <div class="review-row"><span>ติดต่อ</span><span>${escapeHtml(a.phone)} · ${escapeHtml(a.email)}</span></div>
           <div class="review-row"><span>ห้องพัก</span><span>${a.room==='single'?'พักเดี่ยว':'พักคู่'}</span></div>
+          <div class="review-row"><span>การเดินทาง</span><span>${a.travel==='bus'?'รถบัสที่ชมรมฯ จัดให้':'พาหนะส่วนตัว'}</span></div>
           <div class="review-row"><span>อาหาร</span><span>${a.food.map(k=>FOOD_OPTS.find(o=>o.k===k).label).join(', ')||'ไม่มีข้อกำหนด'}${a.allergyNote?' · แพ้: '+escapeHtml(a.allergyNote):''}</span></div>
           <div class="review-row"><span>ค่าลงทะเบียน</span><span>${priceFor(isMember,a.room).toLocaleString()} บาท/ท่าน</span></div>
         </div>`).join('')}
@@ -617,6 +627,9 @@ function bindEvents(){
     document.querySelectorAll('.choice-btn[data-room]').forEach(b=>{
       b.onclick=()=>{ draft.room=b.dataset.room; render(); };
     });
+    document.querySelectorAll('.choice-btn[data-travel]').forEach(b=>{
+      b.onclick=()=>{ draft.travel=b.dataset.travel; render(); };
+    });
     document.querySelectorAll('[data-food]').forEach(c=>{
       c.onchange=(e)=>{
         const k=e.target.dataset.food;
@@ -634,6 +647,9 @@ function bindEvents(){
     document.getElementById('saveAttendee').onclick=()=>{
       if(!draft.fullname.trim() || !draft.position.trim() || !draft.phone.trim() || !draft.email.trim()){
         toast('กรุณากรอกข้อมูลที่จำเป็น (มีเครื่องหมาย *) ให้ครบถ้วน'); return;
+      }
+      if(!draft.travel){
+        toast('กรุณาเลือกวิธีการเดินทาง'); return;
       }
       if(editingIndex!==null){ attendees[editingIndex]={...draft}; editingIndex=null; }
       else { attendees.push({...draft}); }
@@ -765,14 +781,14 @@ async function doAdminLogin(){
 async function exportFromFirestore(){
   const snap = await db.collection('registrations').get();
   if(snap.empty){ toast('ยังไม่มีข้อมูลผู้ลงทะเบียนใน Firestore'); return; }
-  const rows = [['เลขที่ลงทะเบียน','วันที่ส่ง','สถานะ','บริษัท','ที่อยู่ออกบิล','แก้ไขที่อยู่','ชื่อ-สกุล','ชื่อเล่น','ตำแหน่ง','เบอร์โทร','อีเมล','ห้องพัก','อาหาร','แพ้อาหาร','ค่าลงทะเบียน(บาท)']];
+  const rows = [['เลขที่ลงทะเบียน','วันที่ส่ง','สถานะ','บริษัท','ที่อยู่ออกบิล','แก้ไขที่อยู่','ชื่อ-สกุล','ชื่อเล่น','ตำแหน่ง','เบอร์โทร','อีเมล','ห้องพัก','การเดินทาง','อาหาร','แพ้อาหาร','ค่าลงทะเบียน(บาท)']];
   snap.forEach(doc=>{
     const r = doc.data();
     (r.attendees||[]).forEach(a=>{
       rows.push([
         r.regId, r.submittedAt, r.isMember?'สมาชิก':'บุคคลทั่วไป', r.company.name, r.company.address,
         r.company.edited?'ใช่':'ไม่', a.fullname, a.nickname, a.position, `="${a.phone}"`, a.email,
-        a.room==='single'?'เดี่ยว':'คู่', (a.food||[]).join('/'), a.allergyNote,
+        a.room==='single'?'เดี่ยว':'คู่', a.travel==='bus'?'รถบัสชมรมฯ':'พาหนะส่วนตัว', (a.food||[]).join('/'), a.allergyNote,
         priceFor(r.isMember,a.room)
       ]);
     });
