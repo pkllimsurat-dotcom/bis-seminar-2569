@@ -298,6 +298,13 @@
 </div>
 
 <script>
+/* ============== เปิด/ปิดการลงทะเบียน ==============
+   ตั้งเป็น false เพื่อ "ปิด" รับลงทะเบียนจากสาธารณะ — ผู้ใช้ทั่วไปจะเห็นข้อความแจ้งปิดแทนฟอร์ม
+   แต่ปุ่ม "สำหรับเจ้าหน้าที่" (login + export) ยังใช้งานได้ตามปกติเสมอ ไม่ถูกปิดไปด้วย
+   ปิดแล้วต้องการเปิดใหม่: เปลี่ยนกลับเป็น true แล้วอัปโหลดไฟล์ทับ repo เดิม
+*/
+const REGISTRATION_OPEN = false;
+
 /* ============== Firebase ==============
    1. ไปที่ https://console.firebase.google.com → สร้างโปรเจกต์ใหม่
    2. เปิดใช้ Firestore Database (โหมด production) และ Authentication (วิธี Email/Password)
@@ -381,6 +388,11 @@ function escapeHtml(s){
 
 /* ============== RENDER ============== */
 function render(){
+  if(!REGISTRATION_OPEN){
+    document.getElementById('stepper').style.display='none';
+    document.getElementById('app').innerHTML = viewClosed();
+    return;
+  }
   renderStepper();
   const app=document.getElementById('app');
   if(step===1) app.innerHTML = viewMember();
@@ -389,6 +401,18 @@ function render(){
   else if(step===4) app.innerHTML = viewReview();
   else if(step===5) app.innerHTML = viewSuccess();
   bindEvents();
+}
+
+function viewClosed(){
+  return `
+  <div class="card" style="text-align:center;padding:44px 24px;">
+    <div style="font-size:40px;margin-bottom:10px;">🔒</div>
+    <h2 style="color:var(--navy-deep);font-size:20px;margin-bottom:8px;">ปิดรับลงทะเบียนแล้ว</h2>
+    <p style="color:#6B7C93;font-size:14.5px;line-height:1.7;max-width:420px;margin:0 auto;">
+      ขณะนี้ระบบลงทะเบียนสัมมนาสัญจรของชมรมอุตสาหกรรมบางปูได้ปิดรับลงทะเบียนแล้ว
+      ขอบคุณทุกท่านที่ให้ความสนใจ หากมีข้อสงสัยกรุณาติดต่อเจ้าหน้าที่ชมรมฯ
+    </p>
+  </div>`;
 }
 
 function viewMember(){
