@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เจ้าหน้าที่ — จัดการหลักสูตร</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<style>
+  :root{
+    --blue:#3B6E8F; --blue-dark:#274D63; --blue-tint:#E8F0F4;
+    --green:#2F7D4F; --green-dark:#1F5A38; --green-tint:#E9F5EE;
+    --amber:#B8860B; --amber-dark:#8C6508; --amber-tint:#FBF3E1;
+    --red:#D81533; --red-dark:#A80F27; --red-tint:#FCE9EB;
+    --black:#1A1A1A; --grey:#777D7D; --grey-light:#ACAFAF;
+    --line:#E7E7E8; --bg-card:#FAFAFA; --bg:#F2F4F5; --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--black);font-family:'Sarabun',sans-serif;}
+  svg.ic{width:20px;height:20px;flex:none;vertical-align:-4px;}
+  svg.ic-lg{width:34px;height:34px;}
+  .topbar{background:var(--blue-dark);color:#fff;}
+  .topbar-inner{max-width:920px;margin:0 auto;padding:22px 24px;display:flex;justify-content:space-between;align-items:center;}
+  .topbar h1{font-size:19px;margin:0;font-weight:700;}
+  .topbar a{color:#DCE7EC;font-size:13px;text-decoration:none;}
+  .topbar a:hover{text-decoration:underline;}
+  .wrap{max-width:920px;margin:0 auto;padding:26px 24px 80px;}
+
+  .card{background:var(--bg-card);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:var(--radius);padding:24px;margin-bottom:16px;}
+  .card.accent-green{border-left-color:var(--green);}
+  .card h2{font-size:16px;margin:0 0 4px;color:var(--blue-dark);display:flex;align-items:center;gap:9px;}
+  .card .sub{font-size:13px;color:var(--grey);margin:0 0 16px;}
+
+  label{display:block;font-size:13px;font-weight:600;color:var(--blue-dark);margin-bottom:6px;}
+  .req::after{content:" *";color:var(--red);}
+  input[type=text],input[type=number],input[type=email],input[type=password],textarea{
+    width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;
+    font-family:inherit;font-size:14px;background:#fff;color:var(--black);
+  }
+  input:focus,textarea:focus{outline:none;border-color:var(--blue);}
+  .field{margin-bottom:14px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  @media (max-width:700px){.grid2,.grid4{grid-template-columns:1fr 1fr;}}
+  .hint{font-size:11.5px;color:var(--grey);margin-top:4px;}
+
+  button{font-family:inherit;font-size:14px;font-weight:600;border:none;border-radius:10px;padding:11px 18px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
+  .btn-primary{background:var(--blue);color:#fff;}
+  .btn-primary:hover{background:var(--blue-dark);}
+  .btn-ghost{background:transparent;color:var(--blue-dark);border:1.5px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--blue);}
+  .btn-success{background:var(--green);color:#fff;}
+  .btn-danger{background:var(--red-tint);color:var(--red-dark);}
+  .btn-sm{padding:7px 12px;font-size:12.5px;}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 11px;border-radius:20px;}
+  .pill-green{background:var(--green-tint);color:var(--green-dark);}
+  .pill-red{background:var(--red-tint);color:var(--red-dark);}
+
+  .course-item{border:1.5px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:14px;background:#fff;}
+  .course-item .ci-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+  .course-item .ci-name{font-weight:700;color:var(--blue-dark);font-size:16px;}
+  .course-item .ci-meta{font-size:12.5px;color:var(--grey);margin-top:4px;}
+  .course-item .ci-stats{display:flex;gap:16px;margin-top:10px;font-size:12.5px;color:var(--grey);}
+  .course-item .ci-stats b{color:var(--black);font-size:14px;}
+  .link-box{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap;}
+  .link-box input{flex:1;min-width:200px;font-size:12.5px;background:var(--blue-tint);}
+  .qr-wrap{margin-top:10px;display:none;}
+  .qr-wrap img{border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px;}
+
+  .login-wrap{max-width:380px;margin:80px auto;}
+  .err-text{font-size:12px;color:var(--red);margin-top:6px;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--black);color:#fff;padding:11px 20px;border-radius:20px;font-size:13.5px;opacity:0;transition:.25s;pointer-events:none;z-index:50;}
+  .toast.show{opacity:1;}
+  .spinner{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--blue);border-radius:50%;margin:0 auto;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .edit-form{border-top:1.5px dashed var(--line);margin-top:14px;padding-top:14px;display:none;}
+  .edit-form.show{display:block;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <h1>ระบบจัดการหลักสูตร — ชมรมอุตสาหกรรมบางปู</h1>
+    <a href="index.html">← หน้าลงทะเบียน</a>
+  </div>
+</div>
+
+<div class="wrap" id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDbrDLqmg8CEs_wsaVyGwq5f2dlvlmq3M8",
+  authDomain: "bis-seminar-2569.firebaseapp.com",
+  projectId: "bis-seminar-2569",
+  storageBucket: "bis-seminar-2569.firebasestorage.app",
+  messagingSenderId: "656020881419",
+  appId: "1:656020881419:web:7a4a896efaf8efedf1470e"
+};
+let fbReady=false, db=null, auth=null;
+try{
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  auth = firebase.auth();
+  fbReady = firebaseConfig.apiKey !== "YOUR_API_KEY";
+}catch(e){ console.warn(e); }
+
+const ICONS = {
+  plus:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
+  calendar:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>',
+  users:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3-5.5 7-5.5s7 2.2 7 5.5"/><circle cx="17" cy="8" r="2.4"/><path d="M17 11.3c2.5.4 4 2.2 4 4.7"/></svg>',
+  download:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>',
+  link:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6M10 7l1-1a3.5 3.5 0 0 1 5 5l-1 1M14 17l-1 1a3.5 3.5 0 0 1-5-5l1-1"/></svg>',
+  edit:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>'
+};
+
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2400); }
+function escapeHtml(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+let currentUser = null;
+let courses = [];
+
+function render(){
+  const app=document.getElementById('app');
+  if(!fbReady){
+    app.innerHTML = `<div class="card"><p>ยังไม่ได้ตั้งค่า Firebase กรุณาดู SETUP.md</p></div>`;
+    return;
+  }
+  if(!currentUser){ app.innerHTML = viewLogin(); bindLogin(); return; }
+  app.innerHTML = viewDashboard();
+  bindDashboard();
+}
+
+function viewLogin(){
+  return `
+  <div class="login-wrap">
+    <div class="card">
+      <h2>เข้าสู่ระบบเจ้าหน้าที่</h2>
+      <p class="sub">สำหรับผู้ดูแลระบบในการจัดการหลักสูตรและข้อมูลผู้ลงทะเบียน</p>
+      <div class="field"><label class="req">อีเมล</label><input type="email" id="loginEmail" placeholder="admin@example.com"></div>
+      <div class="field"><label class="req">รหัสผ่าน</label><input type="password" id="loginPass"></div>
+      <div class="err-text" id="loginErr"></div>
+      <button class="btn-primary" id="loginBtn" style="width:100%;justify-content:center;margin-top:6px;">เข้าสู่ระบบ</button>
+    </div>
+  </div>`;
+}
+
+function bindLogin(){
+  document.getElementById('loginBtn').onclick = async ()=>{
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass = document.getElementById('loginPass').value;
+    const err = document.getElementById('loginErr');
+    err.textContent='';
+    if(!email||!pass){ err.textContent='กรุณากรอกอีเมลและรหัสผ่าน'; return; }
+    try{
+      await auth.signInWithEmailAndPassword(email, pass);
+    }catch(e){ err.textContent='เข้าสู่ระบบไม่สำเร็จ: อีเมลหรือรหัสผ่านไม่ถูกต้อง'; }
+  };
+}
+
+function viewDashboard(){
+  return `
+  <div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+    <div style="font-size:13.5px;color:var(--grey);">เข้าสู่ระบบในชื่อ <b style="color:var(--black);">${escapeHtml(currentUser.email)}</b></div>
+    <button class="btn-ghost btn-sm" id="logoutBtn">ออกจากระบบ</button>
+  </div>
+
+  <div class="card accent-green">
+    <h2>${ICONS.plus} สร้างหลักสูตร/สัมมนาใหม่</h2>
+    <p class="sub">สร้างครั้งเดียว ได้ลิงก์ลงทะเบียนและ QR Code ของหลักสูตรนี้ไว้ใช้ได้ทันที</p>
+    ${courseForm('new')}
+    <div class="btnrow">
+      <button class="btn-success" id="createBtn">${ICONS.plus} สร้างหลักสูตร</button>
+    </div>
+  </div>
+
+  <div class="card" id="migrateCard" style="display:none;">
+    <h2>${ICONS.download} นำเข้าข้อมูลลงทะเบียนเดิม</h2>
+    <p class="sub">พบข้อมูลลงทะเบียนจากระบบเวอร์ชันก่อน (สัมมนา "เขียนสวัสดิการอย่างไรไม่ให้เป็นค่าจ้าง") อยู่ในฐานข้อมูลเดิม — กดปุ่มนี้ครั้งเดียวเพื่อย้ายเข้าสู่ระบบหลักสูตรใหม่ ข้อมูลเดิมจะไม่ถูกลบหรือกระทบ</p>
+    <button class="btn-primary" id="migrateBtn">นำเข้าข้อมูลเดิม</button>
+  </div>
+
+  <div id="courseList"><div class="spinner"></div></div>
+  `;
+}
+
+const LEGACY_COURSE_ID = 'bis-2569-sep';
+const LEGACY_COURSE_DATA = {
+  name: 'เขียนสวัสดิการอย่างไรไม่ให้เป็นค่าจ้าง',
+  subtitle: 'สัมมนาสัญจรของชมรมอุตสาหกรรมบางปู เชิญผู้สนใจจากนิคมอุตสาหกรรมและทั่วไปร่วมแลกเปลี่ยนความรู้',
+  dateText: '5–6 กันยายน 2569',
+  venue: 'โรงแรม ณ เวลา จังหวัดราชบุรี',
+  duration: '1 คืน 2 วัน',
+  notes: '',
+  priceMemberDouble: 4000, priceMemberSingle: 4900,
+  priceNonMemberDouble: 4500, priceNonMemberSingle: 5400
+};
+
+async function checkLegacyData(){
+  try{
+    const snap = await db.collection('registrations').limit(1).get();
+    if(!snap.empty) document.getElementById('migrateCard').style.display='block';
+  }catch(e){ /* ไม่มี collection เดิม ไม่ต้องทำอะไร */ }
+}
+
+async function migrateLegacyData(){
+  const btn = document.getElementById('migrateBtn');
+  btn.disabled = true; btn.textContent='กำลังนำเข้า...';
+  try{
+    const courseRef = db.collection('courses').doc(LEGACY_COURSE_ID);
+    const courseSnap = await courseRef.get();
+    if(!courseSnap.exists){
+      await courseRef.set({ ...LEGACY_COURSE_DATA, isOpen:false, createdAt:new Date().toISOString() });
+    }
+    const snap = await db.collection('registrations').get();
+    let n=0;
+    const batch = db.batch();
+    snap.forEach(doc=>{
+      const data = doc.data();
+      const ref = courseRef.collection('registrations').doc(doc.id);
+      batch.set(ref, { ...data, courseId: LEGACY_COURSE_ID, courseName: LEGACY_COURSE_DATA.name }, {merge:true});
+      n++;
+    });
+    await batch.commit();
+    toast(`นำเข้าข้อมูลสำเร็จ ${n} รายการ`);
+    document.getElementById('migrateCard').style.display='none';
+    loadCourses();
+  }catch(e){ console.warn(e); toast('นำเข้าข้อมูลไม่สำเร็จ'); }
+  finally{ btn.disabled=false; btn.textContent='นำเข้าข้อมูลเดิม'; }
+}
+
+function courseForm(prefix, c){
+  c = c || { name:'', subtitle:'', dateText:'', venue:'', duration:'', notes:'',
+             priceMemberDouble:4000, priceMemberSingle:4900, priceNonMemberDouble:4500, priceNonMemberSingle:5400 };
+  return `
+  <div class="field"><label class="req">ชื่อหลักสูตร/สัมมนา</label><input type="text" id="${prefix}_name" value="${escapeHtml(c.name)}" placeholder="เช่น เขียนสวัสดิการอย่างไรไม่ให้เป็นค่าจ้าง"></div>
+  <div class="field"><label>คำอธิบายสั้น (แสดงใต้ชื่อหลักสูตร)</label><input type="text" id="${prefix}_subtitle" value="${escapeHtml(c.subtitle)}"></div>
+  <div class="grid2">
+    <div class="field"><label class="req">วันที่จัดอบรม/สัมมนา</label><input type="text" id="${prefix}_dateText" value="${escapeHtml(c.dateText)}" placeholder="เช่น 5–6 กันยายน 2569"></div>
+    <div class="field"><label>สถานที่</label><input type="text" id="${prefix}_venue" value="${escapeHtml(c.venue)}" placeholder="เช่น โรงแรม ณ เวลา จังหวัดราชบุรี"></div>
+  </div>
+  <div class="field"><label>ระยะเวลา</label><input type="text" id="${prefix}_duration" value="${escapeHtml(c.duration)}" placeholder="เช่น 1 คืน 2 วัน"></div>
+  <label style="margin-top:4px;">อัตราค่าลงทะเบียน (บาท/ท่าน)</label>
+  <div class="grid4">
+    <div class="field"><label>สมาชิก พักคู่</label><input type="number" id="${prefix}_pmd" value="${c.priceMemberDouble}"></div>
+    <div class="field"><label>สมาชิก พักเดี่ยว</label><input type="number" id="${prefix}_pms" value="${c.priceMemberSingle}"></div>
+    <div class="field"><label>ทั่วไป พักคู่</label><input type="number" id="${prefix}_pnd" value="${c.priceNonMemberDouble}"></div>
+    <div class="field"><label>ทั่วไป พักเดี่ยว</label><input type="number" id="${prefix}_pns" value="${c.priceNonMemberSingle}"></div>
+  </div>
+  <div class="field"><label>รายละเอียดเพิ่มเติม / หมายเหตุ (แสดงในหน้าลงทะเบียน)</label><textarea id="${prefix}_notes" rows="2">${escapeHtml(c.notes||'')}</textarea></div>
+  `;
+}
+
+function readCourseForm(prefix){
+  const v = id => document.getElementById(prefix+'_'+id).value;
+  return {
+    name: v('name').trim(),
+    subtitle: v('subtitle').trim(),
+    dateText: v('dateText').trim(),
+    venue: v('venue').trim(),
+    duration: v('duration').trim(),
+    notes: v('notes').trim(),
+    priceMemberDouble: Number(v('pmd'))||0,
+    priceMemberSingle: Number(v('pms'))||0,
+    priceNonMemberDouble: Number(v('pnd'))||0,
+    priceNonMemberSingle: Number(v('pns'))||0,
+  };
+}
+
+function genCourseId(){
+  return 'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+}
+
+async function loadCourses(){
+  const box = document.getElementById('courseList');
+  try{
+    const snap = await db.collection('courses').orderBy('createdAt','desc').get();
+    courses = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+  }catch(e){
+    // orderBy อาจพังถ้าเอกสารเก่าไม่มีฟิลด์ createdAt — ลองดึงแบบไม่ sort
+    try{
+      const snap = await db.collection('courses').get();
+      courses = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+    }catch(e2){ box.innerHTML = `<div class="card"><p>โหลดรายการหลักสูตรไม่สำเร็จ</p></div>`; return; }
+  }
+  renderCourseList();
+}
+
+function renderCourseList(){
+  const box = document.getElementById('courseList');
+  if(courses.length===0){ box.innerHTML = `<div class="card"><p class="sub" style="margin:0;">ยังไม่มีหลักสูตรในระบบ สร้างหลักสูตรแรกได้ที่ด้านบน</p></div>`; return; }
+  box.innerHTML = courses.map(c=>{
+    const link = location.origin + location.pathname.replace(/admin\.html$/,'') + 'index.html?course=' + c.id;
+    const open = c.isOpen!==false;
+    return `
+    <div class="course-item" data-id="${c.id}">
+      <div class="ci-top">
+        <div>
+          <div class="ci-name">${ICONS.calendar} ${escapeHtml(c.name||'(ไม่มีชื่อ)')}</div>
+          <div class="ci-meta">${escapeHtml(c.dateText||'')}${c.venue?' · '+escapeHtml(c.venue):''}</div>
+        </div>
+        <span class="pill ${open?'pill-green':'pill-red'}">${open?'เปิดรับลงทะเบียน':'ปิดรับลงทะเบียน'}</span>
+      </div>
+      <div class="ci-stats">
+        <div>${ICONS.users} <b class="reg-count" data-count-for="${c.id}">...</b> รายการลงทะเบียน</div>
+      </div>
+      <div class="link-box">
+        <input type="text" readonly value="${link}" onclick="this.select()">
+        <button class="btn-ghost btn-sm" data-copy="${link}">${ICONS.link} คัดลอกลิงก์</button>
+        <button class="btn-ghost btn-sm" data-qr="${link}">แสดง QR</button>
+        <button class="btn-ghost btn-sm" data-toggle="${c.id}" data-open="${open}">${open?'ปิดรับลงทะเบียน':'เปิดรับลงทะเบียน'}</button>
+        <button class="btn-success btn-sm" data-export="${c.id}">${ICONS.download} Export CSV</button>
+        <button class="btn-ghost btn-sm" data-edit="${c.id}">${ICONS.edit} แก้ไข</button>
+      </div>
+      <div class="qr-wrap" id="qr_${c.id}"></div>
+      <div class="edit-form" id="edit_${c.id}">
+        ${courseForm('e_'+c.id, c)}
+        <div class="btnrow">
+          <button class="btn-primary" data-save="${c.id}">บันทึกการแก้ไข</button>
+          <button class="btn-ghost" data-cancel="${c.id}">ยกเลิก</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  bindCourseItems();
+  courses.forEach(c=>loadRegCount(c.id));
+}
+
+async function loadRegCount(id){
+  try{
+    const snap = await db.collection('courses').doc(id).collection('registrations').get();
+    const el = document.querySelector(`[data-count-for="${id}"]`);
+    if(el) el.textContent = snap.size;
+  }catch(e){
+    const el = document.querySelector(`[data-count-for="${id}"]`);
+    if(el) el.textContent = '-';
+  }
+}
+
+function bindCourseItems(){
+  document.querySelectorAll('[data-copy]').forEach(b=>{
+    b.onclick=()=>{ navigator.clipboard.writeText(b.dataset.copy).then(()=>toast('คัดลอกลิงก์แล้ว')); };
+  });
+  document.querySelectorAll('[data-qr]').forEach(b=>{
+    b.onclick=()=>{
+      const id = b.closest('.course-item').dataset.id;
+      const wrap = document.getElementById('qr_'+id);
+      if(wrap.style.display==='block'){ wrap.style.display='none'; return; }
+      const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=' + encodeURIComponent(b.dataset.qr);
+      wrap.innerHTML = `<img src="${qrUrl}" width="280" height="280" alt="QR Code">`;
+      wrap.style.display='block';
+    };
+  });
+  document.querySelectorAll('[data-toggle]').forEach(b=>{
+    b.onclick=async()=>{
+      const id=b.dataset.toggle; const willOpen = b.dataset.open!=='true';
+      try{
+        await db.collection('courses').doc(id).update({ isOpen: willOpen });
+        toast(willOpen?'เปิดรับลงทะเบียนแล้ว':'ปิดรับลงทะเบียนแล้ว');
+        loadCourses();
+      }catch(e){ toast('อัปเดตไม่สำเร็จ'); }
+    };
+  });
+  document.querySelectorAll('[data-edit]').forEach(b=>{
+    b.onclick=()=>{ document.getElementById('edit_'+b.dataset.edit).classList.toggle('show'); };
+  });
+  document.querySelectorAll('[data-cancel]').forEach(b=>{
+    b.onclick=()=>{ document.getElementById('edit_'+b.dataset.cancel).classList.remove('show'); };
+  });
+  document.querySelectorAll('[data-save]').forEach(b=>{
+    b.onclick=async()=>{
+      const id=b.dataset.save;
+      const data = readCourseForm('e_'+id);
+      if(!data.name || !data.dateText){ toast('กรุณากรอกชื่อหลักสูตรและวันที่ให้ครบถ้วน'); return; }
+      try{
+        await db.collection('courses').doc(id).update({...data, updatedAt:new Date().toISOString()});
+        toast('บันทึกการแก้ไขแล้ว');
+        loadCourses();
+      }catch(e){ toast('บันทึกไม่สำเร็จ'); }
+    };
+  });
+  document.querySelectorAll('[data-export]').forEach(b=>{
+    b.onclick=()=>exportCourseCsv(b.dataset.export);
+  });
+}
+
+async function exportCourseCsv(courseId){
+  const courseDoc = await db.collection('courses').doc(courseId).get();
+  const courseName = courseDoc.exists ? (courseDoc.data().name||courseId) : courseId;
+  const snap = await db.collection('courses').doc(courseId).collection('registrations').get();
+  if(snap.empty){ toast('ยังไม่มีข้อมูลผู้ลงทะเบียนในหลักสูตรนี้'); return; }
+  const rows = [['เลขที่ลงทะเบียน','หลักสูตร','วันที่ส่ง','สถานะ','บริษัท','ที่อยู่ออกบิล','แก้ไขที่อยู่','ชื่อ-สกุล','ชื่อเล่น','ตำแหน่ง','เบอร์โทร','อีเมล','ห้องพัก','การเดินทาง','อาหาร','แพ้อาหาร','ค่าลงทะเบียน(บาท)']];
+  function priceFor(courseData, member, room){
+    if(member) return room==='single'?Number(courseData.priceMemberSingle||0):Number(courseData.priceMemberDouble||0);
+    return room==='single'?Number(courseData.priceNonMemberSingle||0):Number(courseData.priceNonMemberDouble||0);
+  }
+  const courseData = courseDoc.exists ? courseDoc.data() : {};
+  snap.forEach(doc=>{
+    const r = doc.data();
+    (r.attendees||[]).forEach(a=>{
+      rows.push([
+        r.regId, r.courseName||courseName, r.submittedAt, r.isMember?'สมาชิก':'บุคคลทั่วไป', r.company.name, r.company.address,
+        r.company.edited?'ใช่':'ไม่', a.fullname, a.nickname, a.position, `="${a.phone}"`, a.email,
+        a.room==='single'?'เดี่ยว':'คู่', a.travel==='bus'?'รถบัสชมรมฯ':'พาหนะส่วนตัว', (a.food||[]).join('/'), a.allergyNote,
+        priceFor(courseData, r.isMember, a.room)
+      ]);
+    });
+  });
+  const csv = '﻿'+rows.map(row=>row.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`${courseName.replace(/[^฀-๿a-zA-Z0-9]+/g,'_')}_registrations_${Date.now()}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  toast(`ดาวน์โหลด CSV แล้ว (${snap.size} รายการลงทะเบียน)`);
+}
+
+function bindDashboard(){
+  document.getElementById('logoutBtn').onclick = ()=>auth.signOut();
+  document.getElementById('createBtn').onclick = async ()=>{
+    const data = readCourseForm('new');
+    if(!data.name || !data.dateText){ toast('กรุณากรอกชื่อหลักสูตรและวันที่ให้ครบถ้วน'); return; }
+    const id = genCourseId();
+    try{
+      await db.collection('courses').doc(id).set({ ...data, isOpen:true, createdAt:new Date().toISOString() });
+      toast('สร้างหลักสูตรใหม่แล้ว');
+      loadCourses();
+      document.getElementById('new_name').value='';
+    }catch(e){ toast('สร้างหลักสูตรไม่สำเร็จ'); console.warn(e); }
+  };
+  loadCourses();
+  checkLegacyData();
+  const mb = document.getElementById('migrateBtn');
+  if(mb) mb.onclick = migrateLegacyData;
+}
+
+if(fbReady){
+  auth.onAuthStateChanged(user=>{ currentUser = user; render(); });
+} else {
+  render();
+}
+</script>
+</body>
+</html>

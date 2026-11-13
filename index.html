@@ -3,276 +3,181 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ลงทะเบียนสัมมนาสัญจร | ชมรมอุตสาหกรรมบางปู</title>
+<title>ลงทะเบียนอบรม/สัมมนา</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4.3.3/dist/email.min.js"></script>
 <style>
   :root{
-    --navy: #1670B8;
-    --navy-deep: #0F5590;
-    --teal: #14B8A0;
-    --amber: #FF7A59;
-    --amber-deep: #E3603F;
-    --paper: #EAF6FB;
-    --paper-2: #E3F7F1;
-    --ink: #233044;
-    --line: #D7ECF5;
-    --ok: #1FA876;
-    --err: #E0473F;
-    --sun: #FFC34D;
-    --radius: 14px;
+    --blue:#3B6E8F; --blue-dark:#274D63; --blue-tint:#E8F0F4;
+    --green:#2F7D4F; --green-dark:#1F5A38; --green-tint:#E9F5EE;
+    --amber:#B8860B; --amber-dark:#8C6508; --amber-tint:#FBF3E1;
+    --red:#D81533; --red-dark:#A80F27; --red-tint:#FCE9EB;
+    --black:#1A1A1A; --grey:#777D7D; --grey-light:#ACAFAF;
+    --line:#E7E7E8; --bg-card:#FAFAFA; --bg:#F2F4F5;
+    --radius:18px;
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans Thai','Noto Sans Thai',sans-serif;}
-  h1,h2,h3,.display{font-family:'Anuphan',sans-serif;}
-  .topbar{
-    background:linear-gradient(135deg, #1670B8 0%, #14A0B8 55%, #14B8A0 100%);
-    color:#fff;
-    padding:0;
-    border-bottom:none;
-    position:relative;
-    overflow:hidden;
-  }
-  .topbar::before{
-    content:"";
-    position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;
-    background:rgba(255,255,255,.10);
-    pointer-events:none;
-  }
-  .topbar::after{
-    content:"";
-    position:absolute;bottom:-80px;left:-40px;width:180px;height:180px;border-radius:50%;
-    background:rgba(255,195,77,.16);
-    pointer-events:none;
-  }
-  .topbar-inner{
-    max-width:760px;margin:0 auto;padding:34px 24px 28px;position:relative;
-  }
-  .plate{
-    display:inline-flex;align-items:center;gap:8px;
-    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;
-    color:#fff;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
-    padding:4px 12px;border-radius:20px;margin-bottom:14px;
-    text-transform:uppercase;
-  }
-  .topbar h1{font-size:26px;line-height:1.4;margin:0 0 6px;font-weight:700;}
-  .topbar p{margin:0;color:#EAFBF8;font-size:14.5px;line-height:1.7;}
-  .topbar .meta{
-    margin-top:18px;display:flex;flex-wrap:wrap;gap:18px;font-size:13.5px;color:#fff;
-  }
+  body{margin:0;background:var(--bg);color:var(--black);font-family:'Sarabun','Noto Sans Thai',sans-serif;}
+  h1,h2,h3{font-family:'Sarabun',sans-serif;}
+  svg.ic{width:20px;height:20px;flex:none;vertical-align:-4px;}
+  svg.ic-lg{width:34px;height:34px;}
+
+  .topbar{background:var(--blue-dark);color:#fff;position:relative;overflow:hidden;}
+  .topbar::after{content:"";position:absolute;top:-70px;right:-70px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none;}
+  .topbar-inner{max-width:760px;margin:0 auto;padding:30px 24px 26px;position:relative;}
+  .plate{display:inline-flex;align-items:center;gap:7px;font-size:12px;letter-spacing:.06em;color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);padding:4px 12px;border-radius:20px;margin-bottom:14px;}
+  .topbar h1{font-size:24px;line-height:1.4;margin:0 0 6px;font-weight:700;}
+  .topbar p{margin:0;color:#DCE7EC;font-size:14px;line-height:1.7;}
+  .topbar .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:16px;font-size:13.5px;color:#fff;}
   .topbar .meta div{display:flex;align-items:center;gap:7px;}
-  .topbar .meta .dot{width:6px;height:6px;background:var(--sun);border-radius:50%;flex:none;}
 
-  .wrap{max-width:760px;margin:0 auto;padding:28px 24px 80px;}
+  .wrap{max-width:760px;margin:0 auto;padding:26px 24px 80px;}
 
-  .stepper{
-    display:flex;justify-content:space-between;margin-bottom:30px;
-    counter-reset:step;
-  }
-  .step{flex:1;text-align:center;position:relative;font-size:12.5px;color:#8FA3BC;}
-  .step:not(:last-child)::after{
-    content:"";position:absolute;top:13px;left:60%;right:-40%;height:2px;background:var(--line);
-  }
-  .step.done:not(:last-child)::after{background:var(--teal);}
-  .step .num{
-    width:26px;height:26px;border-radius:50%;border:2px solid var(--line);
-    display:flex;align-items:center;justify-content:center;margin:0 auto 6px;
-    background:var(--paper);font-weight:600;font-size:12.5px;color:#8FA3BC;position:relative;z-index:2;
-  }
-  .step.active .num{border-color:var(--navy);color:var(--navy);background:#fff;}
-  .step.done .num{border-color:var(--teal);background:var(--teal);color:#fff;}
-  .step.active{color:var(--navy);font-weight:600;}
-  .step.done{color:var(--teal);}
+  .stepper{display:flex;justify-content:space-between;margin-bottom:28px;}
+  .step{flex:1;text-align:center;position:relative;font-size:12px;color:var(--grey-light);}
+  .step:not(:last-child)::after{content:"";position:absolute;top:13px;left:60%;right:-40%;height:2px;background:var(--line);}
+  .step.done:not(:last-child)::after{background:var(--green);}
+  .step .num{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;margin:0 auto 6px;background:var(--bg-card);font-weight:600;font-size:12px;color:var(--grey-light);position:relative;z-index:2;}
+  .step.active .num{border-color:var(--blue);color:var(--blue);background:#fff;}
+  .step.done .num{border-color:var(--green);background:var(--green);color:#fff;}
+  .step.active{color:var(--blue);font-weight:600;}
+  .step.done{color:var(--green);}
 
-  .card{
-    background:#fff;border:1px solid var(--line);border-radius:var(--radius);
-    padding:28px;margin-bottom:18px;box-shadow:0 4px 18px rgba(22,112,184,.06);
-  }
-  .card h2{
-    font-size:18px;margin:0 0 4px;color:var(--navy-deep);display:flex;align-items:center;gap:10px;
-  }
-  .card h2 .tag{
-    font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--amber);
-    color:#fff;padding:3px 9px;border-radius:20px;letter-spacing:.05em;
-  }
-  .card .sub{font-size:13px;color:#6B7C93;margin:0 0 20px;}
+  .card{background:var(--bg-card);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:var(--radius);padding:26px;margin-bottom:16px;}
+  .card.accent-green{border-left-color:var(--green);}
+  .card.accent-amber{border-left-color:var(--amber);}
+  .card.accent-red{border-left-color:var(--red);}
+  .card h2{font-size:17px;margin:0 0 4px;color:var(--blue-dark);display:flex;align-items:center;gap:9px;}
+  .card .sub{font-size:13px;color:var(--grey);margin:0 0 18px;}
 
-  label{display:block;font-size:13.5px;font-weight:500;color:var(--navy-deep);margin-bottom:6px;}
-  .req::after{content:" *";color:var(--err);}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:3px 11px;border-radius:20px;}
+  .pill-green{background:var(--green-tint);color:var(--green-dark);}
+  .pill-amber{background:var(--amber-tint);color:var(--amber-dark);}
+  .pill-red{background:var(--red-tint);color:var(--red-dark);}
+
+  label{display:block;font-size:13.5px;font-weight:600;color:var(--blue-dark);margin-bottom:6px;}
+  .req::after{content:" *";color:var(--red);}
   input[type=text],input[type=tel],input[type=email],textarea,select{
     width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;
-    font-family:inherit;font-size:14.5px;background:#F7FCFE;color:var(--ink);
-    transition:border-color .15s;
+    font-family:inherit;font-size:14.5px;background:#fff;color:var(--black);transition:border-color .15s;
   }
-  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--teal);background:#fff;}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--blue);}
   .field{margin-bottom:16px;}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
   @media (max-width:560px){.grid2{grid-template-columns:1fr;}}
-  .hint{font-size:12px;color:#7E8FA3;margin-top:5px;}
-  .err-text{font-size:12px;color:var(--err);margin-top:5px;display:none;}
+  .hint{font-size:12px;color:var(--grey);margin-top:5px;}
 
   .choice-row{display:flex;gap:12px;margin-bottom:6px;flex-wrap:wrap;}
   .choice-row .choice-btn{min-width:140px;}
   @media (max-width:560px){ .choice-row .choice-btn{flex:1 1 100%;} }
-  .choice-btn{
-    flex:1;border:1.5px solid var(--line);border-radius:10px;padding:14px;
-    text-align:center;cursor:pointer;background:#F7FCFE;font-weight:500;font-size:14.5px;
-    transition:.15s;color:#4C5E73;
-  }
-  .choice-btn:hover{border-color:var(--teal);}
-  .choice-btn.sel{border-color:var(--navy);background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;}
+  .choice-btn{flex:1;border:1.5px solid var(--line);border-radius:10px;padding:13px;text-align:center;cursor:pointer;background:#fff;font-weight:500;font-size:14px;transition:.15s;color:var(--black);display:flex;align-items:center;justify-content:center;gap:8px;}
+  .choice-btn:hover{border-color:var(--blue);}
+  .choice-btn.sel{border-color:var(--blue);background:var(--blue);color:#fff;}
+  .choice-btn.sel svg{stroke:#fff;}
 
   .search-box{position:relative;}
-  .results{
-    border:1.5px solid var(--line);border-top:none;max-height:260px;overflow-y:auto;
-    background:#fff;border-radius:0 0 10px 10px;position:relative;z-index:5;
-  }
-  .results .opt{padding:11px 13px;cursor:pointer;font-size:14px;border-bottom:1px solid #EAF6FB;}
-  .results .opt:hover{background:var(--paper-2);}
-  .results .opt b{color:var(--navy-deep);}
-  .results .opt .addr{font-size:12px;color:#8A9AAE;display:block;margin-top:2px;}
-  .results .none{padding:13px;font-size:13.5px;color:#8A9AAE;}
+  .results{border:1.5px solid var(--line);border-top:none;max-height:260px;overflow-y:auto;background:#fff;border-radius:0 0 10px 10px;position:relative;z-index:5;}
+  .results .opt{padding:11px 13px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--line);}
+  .results .opt:hover{background:var(--blue-tint);}
+  .results .opt b{color:var(--blue-dark);}
+  .results .opt .addr{font-size:12px;color:var(--grey);display:block;margin-top:2px;}
+  .results .none{padding:13px;font-size:13.5px;color:var(--grey);}
 
-  .company-card{
-    background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);
-    padding:16px;margin-top:10px;
-  }
-  .company-card .name{font-weight:600;color:var(--navy-deep);margin-bottom:4px;}
-  .company-card .editlink{font-size:12px;color:var(--teal);cursor:pointer;text-decoration:underline;}
+  .company-card{background:var(--blue-tint);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-top:10px;}
+  .company-card .name{font-weight:700;color:var(--blue-dark);margin-bottom:4px;}
   .flag-edited{display:inline-block;font-size:11px;background:var(--amber);color:#fff;padding:1px 8px;border-radius:20px;margin-left:6px;}
 
   .food-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
   @media (max-width:560px){.food-grid{grid-template-columns:1fr;}}
-  .check-item{display:flex;align-items:center;gap:9px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:#F7FCFE;cursor:pointer;font-size:14px;}
-  .check-item input{width:16px;height:16px;accent-color:var(--teal);}
-  .check-item.checked{border-color:var(--teal);background:var(--paper-2);}
+  .check-item{display:flex;align-items:center;gap:9px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:14px;}
+  .check-item input{width:16px;height:16px;accent-color:var(--blue);}
+  .check-item.checked{border-color:var(--green);background:var(--green-tint);}
 
-  .attendee-item{
-    border:1.5px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;
-    display:flex;justify-content:space-between;align-items:flex-start;background:#F7FCFE;
-  }
-  .attendee-item .ai-name{font-weight:600;color:var(--navy-deep);font-size:14.5px;}
-  .attendee-item .ai-meta{font-size:12.5px;color:#6B7C93;margin-top:3px;line-height:1.6;}
+  .attendee-item{border:1.5px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;background:#fff;}
+  .attendee-item .ai-name{font-weight:700;color:var(--blue-dark);font-size:14.5px;}
+  .attendee-item .ai-meta{font-size:12.5px;color:var(--grey);margin-top:3px;line-height:1.6;}
   .attendee-item .ai-actions{display:flex;gap:10px;flex:none;margin-left:12px;}
-  .ai-actions span{font-size:12px;color:var(--teal);cursor:pointer;text-decoration:underline;white-space:nowrap;}
-  .ai-actions span.del{color:var(--err);}
+  .ai-actions span{font-size:12px;color:var(--blue);cursor:pointer;text-decoration:underline;white-space:nowrap;}
+  .ai-actions span.del{color:var(--red);}
 
-  .price-note{
-    background:var(--paper-2);border:1px solid #B7EBDF;color:#0E8A73;border-radius:10px;
-    padding:10px 13px;font-size:13px;margin-top:8px;
-  }
+  .price-note{background:var(--green-tint);border:1px solid #CDE8DA;color:var(--green-dark);border-radius:10px;padding:10px 13px;font-size:13px;margin-top:8px;}
 
-  .rate-table{
-    margin-top:16px;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:#F7FCFE;
-  }
-  .rate-table-title{
-    background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;font-size:13px;font-weight:600;
-    padding:9px 14px;
-  }
-  .rate-row{
-    display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:6px;padding:10px 14px;font-size:13.5px;
-    border-top:1px solid var(--line);align-items:center;
-  }
+  .rate-table{margin-top:16px;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;}
+  .rate-table-title{background:var(--blue-dark);color:#fff;font-size:13px;font-weight:600;padding:9px 14px;}
+  .rate-row{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:6px;padding:10px 14px;font-size:13.5px;border-top:1px solid var(--line);align-items:center;}
   .rate-row:first-of-type{border-top:none;}
-  .rate-row span:not(:first-child){text-align:center;font-weight:600;color:var(--navy-deep);}
-  .rate-row.rate-head{
-    background:var(--paper-2);font-size:12px;color:#6B7C93;font-weight:600;
-  }
-  .rate-row.rate-head span:not(:first-child){color:#6B7C93;font-weight:600;}
+  .rate-row span:not(:first-child){text-align:center;font-weight:600;color:var(--blue-dark);}
+  .rate-row.rate-head{background:var(--blue-tint);font-size:12px;color:var(--grey);font-weight:600;}
+  .rate-row.rate-head span:not(:first-child){color:var(--grey);font-weight:600;}
+
+  .notice-box{background:var(--amber-tint);border:1px solid #F0DCA6;color:var(--amber-dark);border-radius:10px;padding:12px 14px;font-size:13.5px;margin-top:14px;line-height:1.6;}
 
   .btnrow{display:flex;justify-content:space-between;gap:12px;margin-top:8px;}
-  button{
-    font-family:inherit;font-size:14.5px;font-weight:600;border:none;border-radius:10px;
-    padding:13px 22px;cursor:pointer;transition:.15s;
-  }
-  .btn-primary{background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;}
-  .btn-primary:hover{filter:brightness(1.05);}
-  .btn-primary:disabled{background:#C9D6E2;filter:none;cursor:not-allowed;}
-  .btn-ghost{background:transparent;color:var(--navy-deep);border:1.5px solid var(--line);}
-  .btn-ghost:hover{border-color:var(--navy);}
-  .btn-amber{background:linear-gradient(135deg,var(--amber),var(--sun));color:#fff;}
-  .btn-amber:hover{filter:brightness(1.05);}
-  .btn-add{background:#fff;color:var(--teal);border:1.5px dashed var(--teal);width:100%;padding:13px;}
-  .btn-add:hover{background:var(--paper-2);}
+  button{font-family:inherit;font-size:14.5px;font-weight:600;border:none;border-radius:10px;padding:13px 22px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:8px;justify-content:center;}
+  .btn-primary{background:var(--blue);color:#fff;}
+  .btn-primary:hover{background:var(--blue-dark);}
+  .btn-primary:disabled{background:var(--grey-light);cursor:not-allowed;}
+  .btn-ghost{background:transparent;color:var(--blue-dark);border:1.5px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--blue);}
+  .btn-success{background:var(--green);color:#fff;}
+  .btn-success:hover{background:var(--green-dark);}
+  .btn-add{background:#fff;color:var(--blue);border:1.5px dashed var(--blue);width:100%;padding:13px;}
+  .btn-add:hover{background:var(--blue-tint);}
 
   .review-block{margin-bottom:18px;}
-  .review-block h3{font-size:14px;color:var(--navy-deep);margin:0 0 8px;text-transform:uppercase;letter-spacing:.04em;font-family:'IBM Plex Mono',monospace;font-weight:600;}
-  .review-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #EAF6FB;font-size:14px;}
-  .review-row span:first-child{color:#6B7C93;}
+  .review-block h3{font-size:13px;color:var(--blue-dark);margin:0 0 8px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;display:flex;align-items:center;gap:7px;}
+  .review-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;gap:12px;}
+  .review-row span:first-child{color:var(--grey);flex:none;}
   .review-row span:last-child{font-weight:500;text-align:right;}
-  .review-attendee{border:1.5px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:10px;background:#F7FCFE;}
+  .review-attendee{border:1.5px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:10px;background:#fff;}
 
-  .pdpa-box{
-    background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);
-    padding:18px;margin-top:6px;
-  }
-  .pdpa-box label{display:flex;gap:11px;font-size:13.5px;color:var(--ink);font-weight:400;align-items:flex-start;cursor:pointer;}
-  .pdpa-box input{width:18px;height:18px;flex:none;margin-top:1px;accent-color:var(--teal);}
+  .pdpa-box{background:var(--blue-tint);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-top:6px;}
+  .pdpa-box label{display:flex;gap:11px;font-size:13.5px;color:var(--black);font-weight:400;align-items:flex-start;cursor:pointer;}
+  .pdpa-box input{width:18px;height:18px;flex:none;margin-top:1px;accent-color:var(--blue);}
 
-  .success{
-    text-align:center;padding:40px 20px;
-  }
-  .success .seal{
-    width:74px;height:74px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--navy));color:#fff;
-    display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:34px;
-  }
-  .success h2{color:var(--navy-deep);font-size:22px;}
-  .success .regid{
-    display:inline-block;margin-top:10px;font-family:'IBM Plex Mono',monospace;
-    background:var(--navy-deep);color:var(--sun);padding:6px 16px;border-radius:20px;font-size:14px;letter-spacing:.05em;
-  }
+  .success{text-align:center;padding:40px 20px;}
+  .success .seal{width:72px;height:72px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+  .success h2{color:var(--green-dark);font-size:22px;}
+  .success .regid{display:inline-block;margin-top:10px;background:var(--blue-dark);color:#FFD37A;padding:6px 16px;border-radius:20px;font-size:14px;letter-spacing:.04em;}
 
-  footer{
-    text-align:center;font-size:12px;color:#8A9AAE;padding:20px 0 40px;
-  }
-  footer a{color:#8A9AAE;}
+  .center-card{text-align:center;padding:44px 24px;}
+  .center-card svg{color:var(--grey-light);margin-bottom:10px;}
 
-  .toast{
-    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
-    background:var(--ink);color:#fff;padding:11px 20px;border-radius:20px;font-size:13.5px;
-    opacity:0;transition:.25s;pointer-events:none;z-index:50;
-  }
+  footer{text-align:center;font-size:12px;color:var(--grey);padding:20px 0 40px;}
+  footer a{color:var(--grey);}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--black);color:#fff;padding:11px 20px;border-radius:20px;font-size:13.5px;opacity:0;transition:.25s;pointer-events:none;z-index:50;}
   .toast.show{opacity:1;}
 
-  .modal-overlay{
-    position:fixed;inset:0;background:rgba(15,85,144,.45);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;
-  }
+  .spinner{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--blue);border-radius:50%;margin:0 auto 14px;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(26,26,26,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
   .modal-overlay.show{display:flex;}
   .modal{background:#fff;border-radius:var(--radius);padding:26px;max-width:380px;width:100%;}
-  .modal h3{margin:0 0 14px;color:var(--navy-deep);font-size:16px;}
-
-  .zone-mark{
-    font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#8A9AAE;letter-spacing:.06em;margin-bottom:10px;
-  }
+  .modal h3{margin:0 0 14px;color:var(--blue-dark);font-size:16px;}
+  .err-text{font-size:12px;color:var(--red);margin-top:5px;}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="topbar-inner">
-    <div class="plate">BIS · บางปู อินดัสเทรียล สัมมนาสัญจร 2569</div>
-    <h1>เขียนสวัสดิการอย่างไรไม่ให้เป็นค่าจ้าง</h1>
-    <p>สัมมนาสัญจรของชมรมอุตสาหกรรมบางปู เชิญผู้สนใจจากนิคมอุตสาหกรรมและทั่วไปร่วมแลกเปลี่ยนความรู้ ณ โรงแรม ณ เวลา จังหวัดราชบุรี</p>
-    <div class="meta">
-      <div><span class="dot"></span>5–6 กันยายน 2569</div>
-      <div><span class="dot"></span>โรงแรม ณ เวลา จังหวัดราชบุรี</div>
-      <div><span class="dot"></span>1 คืน 2 วัน</div>
-    </div>
+  <div class="topbar-inner" id="heroInner">
+    <div class="plate">กำลังโหลดข้อมูล...</div>
+    <h1>&nbsp;</h1>
   </div>
 </div>
 
 <div class="wrap">
-
   <div class="stepper" id="stepper"></div>
-
   <div id="app"></div>
-
   <footer>
-    ข้อมูลเบอร์โทรและอีเมลใช้เพื่อการประสานงานจัดสัมมนาเท่านั้น และจะไม่ถูกนำไปใช้เพื่อวัตถุประสงค์อื่น<br>
-    © ชมรมอุตสาหกรรมบางปู &nbsp;·&nbsp; <span style="cursor:pointer;text-decoration:underline;" onclick="openAdmin()">สำหรับเจ้าหน้าที่</span>
+    ข้อมูลเบอร์โทรและอีเมลใช้เพื่อการประสานงานจัดอบรม/สัมมนาเท่านั้น และจะไม่ถูกนำไปใช้เพื่อวัตถุประสงค์อื่น<br>
+    <span style="cursor:pointer;text-decoration:underline;" onclick="openAdmin()">สำหรับเจ้าหน้าที่</span>
   </footer>
 </div>
 
@@ -281,35 +186,16 @@
 <div class="modal-overlay" id="adminModal">
   <div class="modal" id="adminModalInner">
     <h3>เข้าสู่ระบบเจ้าหน้าที่</h3>
-    <div class="field">
-      <label class="req">อีเมล</label>
-      <input type="text" id="adminEmail" placeholder="admin@example.com">
-    </div>
-    <div class="field">
-      <label class="req">รหัสผ่าน</label>
-      <input type="text" id="adminPass" placeholder="กรอกรหัสผ่าน">
-      <div class="err-text" id="adminErr" style="display:block;color:var(--err);"></div>
-    </div>
+    <p style="font-size:13px;color:var(--grey);margin-top:-8px;">สำหรับผู้ดูแลระบบ จัดการหลักสูตรและนำออกข้อมูลผู้ลงทะเบียน กรุณาไปที่หน้า <b>admin.html</b></p>
     <div class="btnrow">
-      <button class="btn-ghost" onclick="closeAdmin()">ยกเลิก</button>
-      <button class="btn-primary" id="adminLoginBtn" onclick="doAdminLogin()">เข้าสู่ระบบ</button>
+      <button class="btn-ghost" onclick="closeAdmin()">ปิด</button>
+      <a href="admin.html" style="text-decoration:none;"><button class="btn-primary">ไปหน้าเจ้าหน้าที่ →</button></a>
     </div>
   </div>
 </div>
 
 <script>
-/* ============== เปิด/ปิดการลงทะเบียน ==============
-   ตั้งเป็น false เพื่อ "ปิด" รับลงทะเบียนจากสาธารณะ — ผู้ใช้ทั่วไปจะเห็นข้อความแจ้งปิดแทนฟอร์ม
-   แต่ปุ่ม "สำหรับเจ้าหน้าที่" (login + export) ยังใช้งานได้ตามปกติเสมอ ไม่ถูกปิดไปด้วย
-   ปิดแล้วต้องการเปิดใหม่: เปลี่ยนกลับเป็น true แล้วอัปโหลดไฟล์ทับ repo เดิม
-*/
-const REGISTRATION_OPEN = false;
-
 /* ============== Firebase ==============
-   1. ไปที่ https://console.firebase.google.com → สร้างโปรเจกต์ใหม่
-   2. เปิดใช้ Firestore Database (โหมด production) และ Authentication (วิธี Email/Password)
-   3. สร้างผู้ใช้แอดมิน 1 คนใน Authentication → Users → Add user
-   4. คัดลอกค่า config จาก Project settings → ใส่แทนค่าด้านล่างนี้
    ดูขั้นตอนเต็มในไฟล์ SETUP.md
 */
 const firebaseConfig = {
@@ -329,9 +215,79 @@ try{
   fbReady = firebaseConfig.apiKey !== "YOUR_API_KEY";
 }catch(e){ console.warn('Firebase init failed', e); }
 
+/* ============== EmailJS (ส่งอีเมลยืนยันให้ผู้ลงทะเบียนอัตโนมัติ) ==============
+   ใช้ EmailJS เพราะ Firebase โปรเจกต์นี้อยู่แผน Spark (ฟรี) ซึ่งไม่รองรับ Cloud Functions
+   สำหรับส่งอีเมลจากฝั่งเซิร์ฟเวอร์ — EmailJS ทำงานฝั่งเบราว์เซอร์ได้โดยไม่ต้องอัปเกรดแผน
+   สมัครฟรีที่ https://www.emailjs.com (ฟรี 200 อีเมล/เดือน) แล้วใส่ค่า 3 ตัวด้านล่าง ดู SETUP.md
+*/
+const EMAILJS_CONFIG = {
+  publicKey: "YOUR_EMAILJS_PUBLIC_KEY",
+  serviceId: "YOUR_EMAILJS_SERVICE_ID",
+  templateId: "YOUR_EMAILJS_TEMPLATE_ID"
+};
+let emailjsReady = false;
+try{
+  if(window.emailjs && EMAILJS_CONFIG.publicKey !== "YOUR_EMAILJS_PUBLIC_KEY"){
+    emailjs.init({ publicKey: EMAILJS_CONFIG.publicKey });
+    emailjsReady = true;
+  }
+}catch(e){ console.warn('EmailJS init failed', e); }
+
+/* ============== ไอคอน (เส้นมินิมอล) ============== */
+const ICONS = {
+  building:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18"/><path d="M9 21v-4h6v4M9 8h1M9 12h1M14 8h1M14 12h1"/></svg>',
+  users:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3-5.5 7-5.5s7 2.2 7 5.5"/><circle cx="17" cy="8" r="2.4"/><path d="M17 11.3c2.5.4 4 2.2 4 4.7"/></svg>',
+  check:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4M22 12v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h12"/></svg>',
+  lock:'<svg class="ic-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  warn:'<svg class="ic-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 2.6 17.5a1.8 1.8 0 0 0 1.6 2.7h15.6a1.8 1.8 0 0 0 1.6-2.7L13.7 3.9a1.8 1.8 0 0 0-3.4 0z"/></svg>',
+  bus:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M3 11h18M7 19v-1M17 19v-1"/><circle cx="7.5" cy="16" r="0" /></svg>',
+  car:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13l1.5-5a2 2 0 0 1 2-1.5h9a2 2 0 0 1 2 1.5L20 13"/><rect x="2.5" y="13" width="19" height="5" rx="1.5"/><circle cx="7" cy="18.5" r="1.3"/><circle cx="17" cy="18.5" r="1.3"/></svg>',
+  bed:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7M3 18v2M21 18v2M3 13h18"/></svg>',
+  food:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v8M4 2v4a2 2 0 0 0 4 0V2M8 10v12M17 2c-2 1-3 3-3 6s1 4 3 4M17 2v18"/></svg>',
+  mail:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
+  info:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>'
+};
+
 /* ============== ข้อมูลบริษัทสมาชิก (จากฐานข้อมูลชมรม) ============== */
-const COMPANIES = [{"name": "บริษัท กลุ่มสยามบรรจุภัณฑ์อุตสาหกรรม จำกัด", "address": "620 ม.4  นิคมอุตสาหกรรมบางปู ซ.7 A"}, {"name": "บริษัท โกลบอล ยูทิลิตี้ เซอร์วิส จำกัด", "address": "649  ม.4 ซ. 11  นิคมอุตสาหกรรมบางปู"}, {"name": "บริษัท โกลบอล เอ็นไวรอนเมนทอล เทคโนโลยี จำกัด", "address": "649/1 ม.4 นิคมอุตสาหกรรมบางปู ถ.สุขุมวิทสายเก่า"}, {"name": "บริษัท โกลเบิล  เคมีเคิล จำกัด", "address": "545 ม.4 นิคมอุตสาหกรรมบางปู ซอย 9 C  ถ.พัฒนา 3"}, {"name": "บริษัท คาลบี้ธนาวัธน์ จำกัด", "address": "258  หมู่ 4  นิคมอุตสาหกรรมบางปู ซ.3B ถ.สุขุมวิท"}, {"name": "บริษัท เคทีเค.97 ซับคอนแทรคเตอร์ จำกัด", "address": "586/6 ม.2 ถ.สุขุมวิท ต.บางปูใหม่"}, {"name": "บริษัท เคมแฟค จำกัด", "address": "990 ม.2 นิคมอุตสาหกรรมบางปู ซ.4C  ถนนพัฒนา3"}, {"name": "บริษัท จีพีวี เอเชีย (ประเทศไทย) จำกัด", "address": "834 ม.4 นิคมอุตสาหกรรมบางปู ซ.11,12  B  ถ.สุขุมวิท"}, {"name": "บริษัท เจพีไทย อาซาฮี อิเล็กทรกนิกส์ จำกัด", "address": "747 หมู่ 4  นิคมอุตสาหกรรมบางปู  ถ.สุขุมวิท"}, {"name": "บริษัท ซันสตาร์ เคมีคัล (ประเทศไทย) จำกัด", "address": "624 ม.4 นิคมอุตสาหกรรมบางปู ซ.7 A"}, {"name": "บริษัท ซันสตาร์ เอ็นจิเนียริ่ง (ประเทศไทย) จำกัด", "address": "632 ม.4 นิคมอุตสาหกรรมบางปู ซ.6 A"}, {"name": "บริษัท ซูมิโตโม อิเล็คตริก วินเทค (ประเทศไทย) จำกัด", "address": "649 ม.2 นิคมอุตสาหกรรมบางปู  ซ. 1 B"}, {"name": "บริษัท เซ้าท์อีสต์เอเชี่ยนแพคเกจจิ่งแอนด์แคนนิ่ง จำกัด", "address": "233 ม.4 นิคมอุตสาหกรรมบางปู ซ.3 B"}, {"name": "บริษัท เดลต้าอีเลคโทรนิคส์ (ประเทศไทย )จำกัด (มหาชน )", "address": "714 หมู่ 4  นิคมอุตสาหกรรมบางปู เขตส่งออก ซ. E6"}, {"name": "บริษัท ไดอะโฆรม เคมีเคิล จำกัด", "address": "386 ม.4 นิคมอุตสาหกรรมบางปู ซ.6 D"}, {"name": "บริษัท ตะวันนาบรรจุภัณฑ์ จำกัด", "address": "599 ม.4 นิคมอุตสาหกรรมบางปู ซ.14 B ถ.พัฒนา 1"}, {"name": "บริษัท ตะวันออก ซินเทค จำกัด", "address": "611 ม.4 นิคมอุตสาหกรรมบางปู ซ.9 A"}, {"name": "บริษัท ถิรไทย จำกัด(มหาชน)", "address": "516/1 ม.4 นิคมอุตสาหกรรมบางปู ซ. 8 D"}, {"name": "บริษัท ทีโรลิท โอลิมปัส จำกัด", "address": "372 ม4. นิคมอุตสาหกรรมบางปู ซ. 7 C"}, {"name": "บริษัท ที เอฟ ซี พลาสเทค จำกัด", "address": "499 ม.4  นิคมอุตสาหกรรมบางปู ซอย 1 B ถ.สุขุมวิท"}, {"name": "บริษัท ไทย โกเบลโก้ เวลดิ้ง จำกัด", "address": "500 ม.1 นิคมอุตสาหกรรมบางปู ซ.1 ถ.สุขุมวิท"}, {"name": "บริษัท ไทยเซเซน จำกัด", "address": "533  หมู่ 4   นิคมอุตสาหกรรมบางปู ซ.8  ต.แพรกษา"}, {"name": "บริษัท ไทยนิสชิน เซฟุง จำกัด", "address": "276 ม.4 นิคมอุตสาหกรรมบางปู ซ.4 B"}, {"name": "บริษัท ไทยนิสชิน เทคโนมิค จำกัด", "address": "276 ม.4 นิคมอุตสาหกรรมบางปู ซ. 4 B"}, {"name": "บริษัท ไทยปาร์คเกอร์ไรซิ่ง จำกัด", "address": "570 ม.4 นิคมอุตสาหกรรมบางปู ซ.12 B"}, {"name": "บริษัท ไทยฟิน จำกัด", "address": "653 ม.2   นิคมอุตสาหกรรมบางปู ซ.1 B  ถนนพัฒนา 1"}, {"name": "บริษัท ไทยอินเตอร์เนชั่นแนลไดเมคกิ้ง จำกัด", "address": "331 ม4. นิคมอุตสาหกรรมบางปู ซ.6 B"}, {"name": "บริษัท ไทรอัมพ์ทรี จำกัด", "address": "424 ม.4 นิคมอุตสาหกรรมบางปู ซ. 1 C/1"}, {"name": "บริษัท ไทยรีฟิรเจอเรชั่น  คอมโพเน้นท์ จำกัด", "address": "272 หมู่ 4 นิคมอุตสาหกรรมบางปู ซอย 4 B"}, {"name": "บริษัท  ไทยเอ็นเนอร์จี สโตเรจ เทคโนโลยี จำกัด  (มหาชน )", "address": "387  หมู่ 4  ถ.สุขุมวิท  ต.แพรกษา"}, {"name": "บริษัท นาสโตะ(ประเทศไทย) จำกัด", "address": "555 ม.4 นิคมอุตสาหกรรมบางปู ซ.9 B"}, {"name": "บริษัท นิกโก คอร์ปอเรชั่น (ประเทศไทย) จำกัด", "address": "373 ม.4 นิคมอุตสาหกรรมบางปู ซ.6 D"}, {"name": "บริษัท บางปูเคมีเคิลส์ จำกัด", "address": "523 ม.4 นิคมอุตสาหกรรมบางปู ซ.8 C"}, {"name": "บริษัท บีเอเอสเอฟ (ไทย) จำกัด", "address": "307-308 ม.4 นิคมอุตสาหกรรมบางปู ซ.6 C"}, {"name": "บริษัท บี เอ็ม ที เอเชีย จำกัด", "address": "967 หมู่ 4 นิคมอุตสาหกรรมบางปู ซ.11บี ถ.สุขุมวิท"}, {"name": "บริษัท ไบโอแลป จำกัด", "address": "625 ม.4 นิคมอุตสาหกรรมบางปู ซ.7  A"}, {"name": "บริษัท พาราเคมีภัณฑ์ จำกัด", "address": "225 ม.4 นิคมอุตสาหกรรมบางปู ซ.3 C"}, {"name": "บริษัท ฟูจิทัสโก้ จำกัด", "address": "612-612/1 ,1888  หมู่ 4  นิคมอุตสาหกรรมบางปู"}, {"name": "บริษัท เฟลตัลอุตสาหกรรม จำกัด", "address": "476 ม.4 นิคมอุตสาหกรรมบางปู ซ. 2 B"}, {"name": "บริษัท มัตซุย (เอเซีย) จำกัด", "address": "300 ม.4 นิคมอุตสาหกรรมบางปู ซ. 5 C ถ.สุขุมวิท"}, {"name": "บริษัท มูราคามิ แอมพาส (ประเทศไทย) จำกัด", "address": "278 ม.4 นิคมอุตสาหกรรมบางปู ซ.5 B"}, {"name": "บริษัท เมก้าไลฟ์ไซแอ็นซ์  จำกัด (มหาชน)", "address": "384 ม.4 นิคมอุตสาหกรรมบางปู ถ.พัฒนา 3  ซ. 6 D"}, {"name": "บริษัท แมทเทล กรุงเทพ จำกัด", "address": "683 ม.4 นิคมอุตสาหกรรมบางปู  เขตส่งออก ซ.E 1"}, {"name": "บริษัท ล่ำสูง (ประเทศไทย) จำกัด (มหาชน)", "address": "236 ม.4 นิคมอุตสาหกรรมบางปู ซ. 2 B"}, {"name": "บริษัท วิวเทค เอเชีย จำกัด", "address": "243 ม.4 นิคมอุตสาหกรรมบางปู ซ. 6 B"}, {"name": "บริษัท วิโนอา (ไทยแลนด์ )จำกัด", "address": "416 ก. หมู่.4 นิคมอุตสาหกรรมบางปู ซ.1 C/1"}, {"name": "บริษัท ศรีไทย มิยากาวา จำกัด", "address": "539 ม.4 นิคมอุตสาหกรรมบางปู ซ.8 B"}, {"name": "บริษัท ศรีไทยซุปเปอร์แวร์ จำกัด (มหาชน) สาขาบางปู", "address": "610 ม.4 นิคมอุตสาหกรรมบางปู ซ.8 A"}, {"name": "บริษัท ศรีไทยเดลี่ฟู้ดส์  จำกัด", "address": "247/1  หมู่ 4 นิคมอุตสาหกรรมบางปู  ซอย 3B"}, {"name": "สถาบันวิจัยวิทยาศาสตร์และเทคโนโลยี", "address": "นิคมอุตสาหกรรมบางปู ซ.1C ต.แพรกษา"}, {"name": "บริษัท สยาม พีวีเอส เคมีคอลส์ จำกัด", "address": "403 ม.4  นิคมอุตสาหกรรมบางปู  ซ.1C ถ.สุขุมวิท"}, {"name": "บริษัท สยามทบพันแพคเกจจิ่ง จำกัด", "address": "543 ม.4 นิคมอุตสาหกรรมบางปู ซ. 9 C"}, {"name": "บริษัท สาลี่คัลเล่อร์ จำกัด (มหาชน)", "address": "858 ม.2 ซ.1C/1 ต.บางปูใหม่ อ.เมือง จ.สมุทรปราการ"}, {"name": "บริษัท หวาเหลี่ยง เซรามิค ฮาร์ดแวร์ แฟคโทรี่ จำกัด", "address": "534 ม.4 นิคมอุตสาหกรรมบางปู ซ.9 B ถ.สุขุมวิท"}, {"name": "บริษัท อมาล์เลียน เอ็นเตอร์ไพรส์(ไทยแลนด์) จำกัด", "address": "707 ม.4 นิคมอุตสาหกรรมบางปูเขตส่งออก ซ.E 7"}, {"name": "บริษัท อิโต้(ประเทศไทย) จำกัด", "address": "490 ม.4 นิคมอุตสาหกรรมบางปู ซ.1 B"}, {"name": "บริษัท อินฟุส เมดิคัล (ประเทศไทย) จำกัด", "address": "706 ม.4 นิคมอุตสาหกรรมบางปู  เขตส่งออก ซ. E9"}, {"name": "บริษัท อินเตอร์พรีทีฟ จำกัด", "address": "616 นิคมอุตสาหกรรมบางปู ซอย 8A  หมู่ที่ 4"}, {"name": "บริษัท อุตสาหกรรมกรดมะนาว จำกัด", "address": "231 ม.4 นิคมอุตสาหกรรมบางปู ซ. 2 B"}, {"name": "บริษัทอูเอโน ไฟน์ เคมีคัลส์ อินดัสตรี (ประเทศไทย) จก.", "address": "349 ม.4 นิคมอุตสาหกรรมบางปู ซ.7-8 C"}, {"name": "บริษัท เอเซียไฟเบอร์ จำกัด (มหาชน)", "address": "406-7 ม.7  ซอย 1  ต.บางปูใหม่"}, {"name": "บริษัท เอ็น เอช เค พรีซิชั่น (ประเทศไทย) จำกัด", "address": "878  ม.2 นิคมอุตสาหกรรมบางปู (เหนือ )"}, {"name": "บริษัท เอ็น เอช เค สปริง (ประเทศไทย) จำกัด", "address": "549 ม.4 นิคมอุตสาหกรรมบางปู ซ.9 B"}, {"name": "บริษัท เอ็ม.ซี.พลาสติก จำกัด", "address": "822 ม.4 นิคมอุตสาหกรรมบางปู ซ. 13 B"}, {"name": "บริษัท แอ็พพลาย ดีบี จำกัด (มหาชน)", "address": "252 ม.4  นิคมอุตสาหกรรมบางปู ซ. 3 C ต.แพรกษา"}, {"name": "บริษัท แอมพาส อินดัสตรี จำกัด", "address": "355 ม.4 นิคมอุตสาหกรรมบางปู ซ.7 C"}, {"name": "บริษัท โอเชียนกลาส จำกัด (มหาชน)", "address": "365-365/1 ม.4 นิคมอุตสาหกรรมบางปู ซ.8 B"}, {"name": "บริษัท ไอ เอ ซี ซี  เคมิคอล โซลูชั่นส์ จำกัด", "address": "303 ม.4 นิคมอุตสาหกรรมบางปู  ซ. 5 C"}, {"name": "บริษัท ไอ.พี.วัน  จำกัด", "address": "65 ถนน.รามคำแหง  แขวงสะพาน  เขตสะพานสูง"}, {"name": "บริษัท แอล ดี เอส เมทัล เวิร์ค จำกัด", "address": "516/3 ม.4  นิคมอุตสาหกรรมบางปู   ซ.11 B"}, {"name": "บริษัท ฮะฮงสตีล จำกัด", "address": "812 ม.4  นิคมอุตสาหกรรมบางปู ซ 14 B"}, {"name": "บริษัท นิวบางปูแมนิวแฟคเจอริ่ง จำกัด", "address": "635   นิคมอุตสาหกรรมบางปู  ซอย 6 A"}, {"name": "บริษัท ทีเอส โมลิเมอร์ จำกัด", "address": "662   นิคมอุตสาหกรรมบางปู  ซอย 2B"}, {"name": "บริษัท เอดีบี  ซีแลนด์ จำกัด", "address": "252  ม.4  ซอย 3C  ถนนสุขุมวิท"}, {"name": "บริษัท จินเป่า พรีซิชั่น อินดัสทรี่ จำกัด  (สำนักงานใหญ่)", "address": "631  ม.4  ซอย 12B  ถนนสุขุมวิท"}, {"name": "บริษัท จินเป่า พรีซิชั่น อินดัสทรี่ จำกัด  (โรงงาน)", "address": "647  ม.4  ซอย 11B  ถนนสุขุมวิท"}, {"name": "บริษัท สแตนดาร์ด แมนูแฟคเจอริ่ง  จำกัด", "address": "844  ม.4  ซอย 12B ถนนสุขุมวิท"}, {"name": "บริษัท เนสท์เล่ ประเทศไทย จำกัด", "address": "999/9 ถนนพระราม 1 แขวงปทุมวัน"}, {"name": "บริษัท ศมลวรรณรุ่งเรืองกิจ   จำกัด", "address": "543  หมู่ 2 ซอย 3A นิคมอุตสาหกรรมบางปู"}, {"name": "บริษัท วีก้า บอลล์ แมนนูแฟคเจอริ่ง จำกัด", "address": "653 หมู่ 4 ซอย E6  นิคมอุตสาหกรรมบางปู"}, {"name": "บริษัท เกรียงไกรรีไซเคิล จำกัด", "address": "818 ม.2  ต.บางปูใหม่ อ.เมือง จ.สมุทรปราการ 10280"}, {"name": "โรงพยาบาลเปาโลสมุทรปราการ", "address": "123 ม.8 ถ.ศรีนครินทร์  ต.บางเมือง  อ.เมือง"}, {"name": "บริษัท สมุทรเวชกิจ จำกัด", "address": "156 ถ.เทศบาล12 ต.ปากน้ำ อ.เมือง"}, {"name": "บริษัท ศิครินทร์ จำกัด (มหาชน) รพ.ศิครินทร์ สมุทรปราการ", "address": "976  ถนนลาซาล  แขวงบางนาใต้"}, {"name": "บริษัท ดีไอซี สยามเคมีคอลอินดัสตรี้ จำกัด", "address": "549  ม.7  ถ.สุขุมวิท ก.ม.36"}, {"name": "บริษัท วินแชนซ์ อินดัสตรีส์ จำกัด", "address": "103/39 ม.21 ซอยจงศิริ ถนนบางพลี-ตำหรุ"}, {"name": "บริษัท เพ็ท ทรีทส์ จำกัด", "address": "488/8 หมู่ 2 ซอยลำบางผี ถ.บางพลี-ตำหรุ"}, {"name": "บริษัท บียอนด์ เอจ จำกัด", "address": "382/10  หมู่ 1 ถนนเทพารักษ์ ต.บางเสาธง"}, {"name": "บริษัท เคซีอี อีเลคโทรนิคส์ จำกัด   ( มหาชน )", "address": "72-72/1-3 นิคมอุตสาหกรรมลาดกระบัง"}, {"name": "บริษัท เอดีอี โซลูชั่น  จำกัด", "address": "888/108 หมู่ 3 ถ.สุขุมวิท  ต.บางปูใหม่"}, {"name": "บริษัท มัลติเทค ฟู๊ด  แมนูแฟคเจอริ่ง  จำกัด", "address": "789  หมู่ 2  ต.แพรกษาใหม่ อ.เมืองสมุทรปราการ"}]
-;
+const COMPANIES = [{"name": "บริษัท กลุ่มสยามบรรจุภัณฑ์อุตสาหกรรม จำกัด", "address": "620 ม.4  นิคมอุตสาหกรรมบางปู ซ.7 A"}, {"name": "บริษัท โกลบอล ยูทิลิตี้ เซอร์วิส จำกัด", "address": "649  ม.4 ซ. 11  นิคมอุตสาหกรรมบางปู"}, {"name": "บริษัท โกลบอล เอ็นไวรอนเมนทอล เทคโนโลยี จำกัด", "address": "649/1 ม.4 นิคมอุตสาหกรรมบางปู ถ.สุขุมวิทสายเก่า"}, {"name": "บริษัท โกลเบิล  เคมีเคิล จำกัด", "address": "545 ม.4 นิคมอุตสาหกรรมบางปู ซอย 9 C  ถ.พัฒนา 3"}, {"name": "บริษัท คาลบี้ธนาวัธน์ จำกัด", "address": "258  หมู่ 4  นิคมอุตสาหกรรมบางปู ซ.3B ถ.สุขุมวิท"}, {"name": "บริษัท เคทีเค.97 ซับคอนแทรคเตอร์ จำกัด", "address": "586/6 ม.2 ถ.สุขุมวิท ต.บางปูใหม่"}, {"name": "บริษัท เคมแฟค จำกัด", "address": "990 ม.2 นิคมอุตสาหกรรมบางปู ซ.4C  ถนนพัฒนา3"}, {"name": "บริษัท จีพีวี เอเชีย (ประเทศไทย) จำกัด", "address": "834 ม.4 นิคมอุตสาหกรรมบางปู ซ.11,12  B  ถ.สุขุมวิท"}, {"name": "บริษัท เจพีไทย อาซาฮี อิเล็กทรกนิกส์ จำกัด", "address": "747 หมู่ 4  นิคมอุตสาหกรรมบางปู  ถ.สุขุมวิท"}, {"name": "บริษัท ซันสตาร์ เคมีคัล (ประเทศไทย) จำกัด", "address": "624 ม.4 นิคมอุตสาหกรรมบางปู ซ.7 A"}, {"name": "บริษัท ซันสตาร์ เอ็นจิเนียริ่ง (ประเทศไทย) จำกัด", "address": "632 ม.4 นิคมอุตสาหกรรมบางปู ซ.6 A"}, {"name": "บริษัท ซูมิโตโม อิเล็คตริก วินเทค (ประเทศไทย) จำกัด", "address": "649 ม.2 นิคมอุตสาหกรรมบางปู  ซ. 1 B"}, {"name": "บริษัท เซ้าท์อีสต์เอเชี่ยนแพคเกจจิ่งแอนด์แคนนิ่ง จำกัด", "address": "233 ม.4 นิคมอุตสาหกรรมบางปู ซ.3 B"}, {"name": "บริษัท เดลต้าอีเลคโทรนิคส์ (ประเทศไทย )จำกัด (มหาชน )", "address": "714 หมู่ 4  นิคมอุตสาหกรรมบางปู เขตส่งออก ซ. E6"}, {"name": "บริษัท ไดอะโฆรม เคมีเคิล จำกัด", "address": "386 ม.4 นิคมอุตสาหกรรมบางปู ซ.6 D"}, {"name": "บริษัท ตะวันนาบรรจุภัณฑ์ จำกัด", "address": "599 ม.4 นิคมอุตสาหกรรมบางปู ซ.14 B ถ.พัฒนา 1"}, {"name": "บริษัท ตะวันออก ซินเทค จำกัด", "address": "611 ม.4 นิคมอุตสาหกรรมบางปู ซ.9 A"}, {"name": "บริษัท ถิรไทย จำกัด(มหาชน)", "address": "516/1 ม.4 นิคมอุตสาหกรรมบางปู ซ. 8 D"}, {"name": "บริษัท ทีโรลิท โอลิมปัส จำกัด", "address": "372 ม4. นิคมอุตสาหกรรมบางปู ซ. 7 C"}, {"name": "บริษัท ที เอฟ ซี พลาสเทค จำกัด", "address": "499 ม.4  นิคมอุตสาหกรรมบางปู ซอย 1 B ถ.สุขุมวิท"}, {"name": "บริษัท ไทย โกเบลโก้ เวลดิ้ง จำกัด", "address": "500 ม.1 นิคมอุตสาหกรรมบางปู ซ.1 ถ.สุขุมวิท"}, {"name": "บริษัท ไทยเซเซน จำกัด", "address": "533  หมู่ 4   นิคมอุตสาหกรรมบางปู ซ.8  ต.แพรกษา"}, {"name": "บริษัท ไทยนิสชิน เซฟุง จำกัด", "address": "276 ม.4 นิคมอุตสาหกรรมบางปู ซ.4 B"}, {"name": "บริษัท ไทยนิสชิน เทคโนมิค จำกัด", "address": "276 ม.4 นิคมอุตสาหกรรมบางปู ซ. 4 B"}, {"name": "บริษัท ไทยปาร์คเกอร์ไรซิ่ง จำกัด", "address": "570 ม.4 นิคมอุตสาหกรรมบางปู ซ.12 B"}, {"name": "บริษัท ไทยฟิน จำกัด", "address": "653 ม.2   นิคมอุตสาหกรรมบางปู ซ.1 B  ถนนพัฒนา 1"}, {"name": "บริษัท ไทยอินเตอร์เนชั่นแนลไดเมคกิ้ง จำกัด", "address": "331 ม4. นิคมอุตสาหกรรมบางปู ซ.6 B"}, {"name": "บริษัท ไทรอัมพ์ทรี จำกัด", "address": "424 ม.4 นิคมอุตสาหกรรมบางปู ซ. 1 C/1"}, {"name": "บริษัท ไทยรีฟิรเจอเรชั่น  คอมโพเน้นท์ จำกัด", "address": "272 หมู่ 4 นิคมอุตสาหกรรมบางปู ซอย 4 B"}, {"name": "บริษัท  ไทยเอ็นเนอร์จี สโตเรจ เทคโนโลยี จำกัด  (มหาชน )", "address": "387  หมู่ 4  ถ.สุขุมวิท  ต.แพรกษา"}, {"name": "บริษัท นาสโตะ(ประเทศไทย) จำกัด", "address": "555 ม.4 นิคมอุตสาหกรรมบางปู ซ.9 B"}, {"name": "บริษัท นิกโก คอร์ปอเรชั่น (ประเทศไทย) จำกัด", "address": "373 ม.4 นิคมอุตสาหกรรมบางปู ซ.6 D"}, {"name": "บริษัท บางปูเคมีเคิลส์ จำกัด", "address": "523 ม.4 นิคมอุตสาหกรรมบางปู ซ.8 C"}, {"name": "บริษัท บีเอเอสเอฟ (ไทย) จำกัด", "address": "307-308 ม.4 นิคมอุตสาหกรรมบางปู ซ.6 C"}, {"name": "บริษัท บี เอ็ม ที เอเชีย จำกัด", "address": "967 หมู่ 4 นิคมอุตสาหกรรมบางปู ซ.11บี ถ.สุขุมวิท"}, {"name": "บริษัท ไบโอแลป จำกัด", "address": "625 ม.4 นิคมอุตสาหกรรมบางปู ซ.7  A"}, {"name": "บริษัท พาราเคมีภัณฑ์ จำกัด", "address": "225 ม.4 นิคมอุตสาหกรรมบางปู ซ.3 C"}, {"name": "บริษัท ฟูจิทัสโก้ จำกัด", "address": "612-612/1 ,1888  หมู่ 4  นิคมอุตสาหกรรมบางปู"}, {"name": "บริษัท เฟลตัลอุตสาหกรรม จำกัด", "address": "476 ม.4 นิคมอุตสาหกรรมบางปู ซ. 2 B"}, {"name": "บริษัท มัตซุย (เอเซีย) จำกัด", "address": "300 ม.4 นิคมอุตสาหกรรมบางปู ซ. 5 C ถ.สุขุมวิท"}, {"name": "บริษัท มูราคามิ แอมพาส (ประเทศไทย) จำกัด", "address": "278 ม.4 นิคมอุตสาหกรรมบางปู ซ.5 B"}, {"name": "บริษัท เมก้าไลฟ์ไซแอ็นซ์  จำกัด (มหาชน)", "address": "384 ม.4 นิคมอุตสาหกรรมบางปู ถ.พัฒนา 3  ซ. 6 D"}, {"name": "บริษัท แมทเทล กรุงเทพ จำกัด", "address": "683 ม.4 นิคมอุตสาหกรรมบางปู  เขตส่งออก ซ.E 1"}, {"name": "บริษัท ล่ำสูง (ประเทศไทย) จำกัด (มหาชน)", "address": "236 ม.4 นิคมอุตสาหกรรมบางปู ซ. 2 B"}, {"name": "บริษัท วิวเทค เอเชีย จำกัด", "address": "243 ม.4 นิคมอุตสาหกรรมบางปู ซ. 6 B"}, {"name": "บริษัท วิโนอา (ไทยแลนด์ )จำกัด", "address": "416 ก. หมู่.4 นิคมอุตสาหกรรมบางปู ซ.1 C/1"}, {"name": "บริษัท ศรีไทย มิยากาวา จำกัด", "address": "539 ม.4 นิคมอุตสาหกรรมบางปู ซ.8 B"}, {"name": "บริษัท ศรีไทยซุปเปอร์แวร์ จำกัด (มหาชน) สาขาบางปู", "address": "610 ม.4 นิคมอุตสาหกรรมบางปู ซ.8 A"}, {"name": "บริษัท ศรีไทยเดลี่ฟู้ดส์  จำกัด", "address": "247/1  หมู่ 4 นิคมอุตสาหกรรมบางปู  ซอย 3B"}, {"name": "สถาบันวิจัยวิทยาศาสตร์และเทคโนโลยี", "address": "นิคมอุตสาหกรรมบางปู ซ.1C ต.แพรกษา"}, {"name": "บริษัท สยาม พีวีเอส เคมีคอลส์ จำกัด", "address": "403 ม.4  นิคมอุตสาหกรรมบางปู  ซ.1C ถ.สุขุมวิท"}, {"name": "บริษัท สยามทบพันแพคเกจจิ่ง จำกัด", "address": "543 ม.4 นิคมอุตสาหกรรมบางปู ซ. 9 C"}, {"name": "บริษัท สาลี่คัลเล่อร์ จำกัด (มหาชน)", "address": "858 ม.2 ซ.1C/1 ต.บางปูใหม่ อ.เมือง จ.สมุทรปราการ"}, {"name": "บริษัท หวาเหลี่ยง เซรามิค ฮาร์ดแวร์ แฟคโทรี่ จำกัด", "address": "534 ม.4 นิคมอุตสาหกรรมบางปู ซ.9 B ถ.สุขุมวิท"}, {"name": "บริษัท อมาล์เลียน เอ็นเตอร์ไพรส์(ไทยแลนด์) จำกัด", "address": "707 ม.4 นิคมอุตสาหกรรมบางปูเขตส่งออก ซ.E 7"}, {"name": "บริษัท อิโต้(ประเทศไทย) จำกัด", "address": "490 ม.4 นิคมอุตสาหกรรมบางปู ซ.1 B"}, {"name": "บริษัท อินฟุส เมดิคัล (ประเทศไทย) จำกัด", "address": "706 ม.4 นิคมอุตสาหกรรมบางปู  เขตส่งออก ซ. E9"}, {"name": "บริษัท อินเตอร์พรีทีฟ จำกัด", "address": "616 นิคมอุตสาหกรรมบางปู ซอย 8A  หมู่ที่ 4"}, {"name": "บริษัท อุตสาหกรรมกรดมะนาว จำกัด", "address": "231 ม.4 นิคมอุตสาหกรรมบางปู ซ. 2 B"}, {"name": "บริษัทอูเอโน ไฟน์ เคมีคัลส์ อินดัสตรี (ประเทศไทย) จก.", "address": "349 ม.4 นิคมอุตสาหกรรมบางปู ซ.7-8 C"}, {"name": "บริษัท เอเซียไฟเบอร์ จำกัด (มหาชน)", "address": "406-7 ม.7  ซอย 1  ต.บางปูใหม่"}, {"name": "บริษัท เอ็น เอช เค พรีซิชั่น (ประเทศไทย) จำกัด", "address": "878  ม.2 นิคมอุตสาหกรรมบางปู (เหนือ )"}, {"name": "บริษัท เอ็น เอช เค สปริง (ประเทศไทย) จำกัด", "address": "549 ม.4 นิคมอุตสาหกรรมบางปู ซ.9 B"}, {"name": "บริษัท เอ็ม.ซี.พลาสติก จำกัด", "address": "822 ม.4 นิคมอุตสาหกรรมบางปู ซ. 13 B"}, {"name": "บริษัท แอ็พพลาย ดีบี จำกัด (มหาชน)", "address": "252 ม.4  นิคมอุตสาหกรรมบางปู ซ. 3 C ต.แพรกษา"}, {"name": "บริษัท แอมพาส อินดัสตรี จำกัด", "address": "355 ม.4 นิคมอุตสาหกรรมบางปู ซ.7 C"}, {"name": "บริษัท โอเชียนกลาส จำกัด (มหาชน)", "address": "365-365/1 ม.4 นิคมอุตสาหกรรมบางปู ซ.8 B"}, {"name": "บริษัท ไอ เอ ซี ซี  เคมิคอล โซลูชั่นส์ จำกัด", "address": "303 ม.4 นิคมอุตสาหกรรมบางปู  ซ. 5 C"}, {"name": "บริษัท ไอ.พี.วัน  จำกัด", "address": "65 ถนน.รามคำแหง  แขวงสะพาน  เขตสะพานสูง"}, {"name": "บริษัท แอล ดี เอส เมทัล เวิร์ค จำกัด", "address": "516/3 ม.4  นิคมอุตสาหกรรมบางปู   ซ.11 B"}, {"name": "บริษัท ฮะฮงสตีล จำกัด", "address": "812 ม.4  นิคมอุตสาหกรรมบางปู ซ 14 B"}, {"name": "บริษัท นิวบางปูแมนิวแฟคเจอริ่ง จำกัด", "address": "635   นิคมอุตสาหกรรมบางปู  ซอย 6 A"}, {"name": "บริษัท ทีเอส โมลิเมอร์ จำกัด", "address": "662   นิคมอุตสาหกรรมบางปู  ซอย 2B"}, {"name": "บริษัท เอดีบี  ซีแลนด์ จำกัด", "address": "252  ม.4  ซอย 3C  ถนนสุขุมวิท"}, {"name": "บริษัท จินเป่า พรีซิชั่น อินดัสทรี่ จำกัด  (สำนักงานใหญ่)", "address": "631  ม.4  ซอย 12B  ถนนสุขุมวิท"}, {"name": "บริษัท จินเป่า พรีซิชั่น อินดัสทรี่ จำกัด  (โรงงาน)", "address": "647  ม.4  ซอย 11B  ถนนสุขุมวิท"}, {"name": "บริษัท สแตนดาร์ด แมนูแฟคเจอริ่ง  จำกัด", "address": "844  ม.4  ซอย 12B ถนนสุขุมวิท"}, {"name": "บริษัท เนสท์เล่ ประเทศไทย จำกัด", "address": "999/9 ถนนพระราม 1 แขวงปทุมวัน"}, {"name": "บริษัท ศมลวรรณรุ่งเรืองกิจ   จำกัด", "address": "543  หมู่ 2 ซอย 3A นิคมอุตสาหกรรมบางปู"}, {"name": "บริษัท วีก้า บอลล์ แมนนูแฟคเจอริ่ง จำกัด", "address": "653 หมู่ 4 ซอย E6  นิคมอุตสาหกรรมบางปู"}, {"name": "บริษัท เกรียงไกรรีไซเคิล จำกัด", "address": "818 ม.2  ต.บางปูใหม่ อ.เมือง จ.สมุทรปราการ 10280"}, {"name": "โรงพยาบาลเปาโลสมุทรปราการ", "address": "123 ม.8 ถ.ศรีนครินทร์  ต.บางเมือง  อ.เมือง"}, {"name": "บริษัท สมุทรเวชกิจ จำกัด", "address": "156 ถ.เทศบาล12 ต.ปากน้ำ อ.เมือง"}, {"name": "บริษัท ศิครินทร์ จำกัด (มหาชน) รพ.ศิครินทร์ สมุทรปราการ", "address": "976  ถนนลาซาล  แขวงบางนาใต้"}, {"name": "บริษัท ดีไอซี สยามเคมีคอลอินดัสตรี้ จำกัด", "address": "549  ม.7  ถ.สุขุมวิท ก.ม.36"}, {"name": "บริษัท วินแชนซ์ อินดัสตรีส์ จำกัด", "address": "103/39 ม.21 ซอยจงศิริ ถนนบางพลี-ตำหรุ"}, {"name": "บริษัท เพ็ท ทรีทส์ จำกัด", "address": "488/8 หมู่ 2 ซอยลำบางผี ถ.บางพลี-ตำหรุ"}, {"name": "บริษัท บียอนด์ เอจ จำกัด", "address": "382/10  หมู่ 1 ถนนเทพารักษ์ ต.บางเสาธง"}, {"name": "บริษัท เคซีอี อีเลคโทรนิคส์ จำกัด   ( มหาชน )", "address": "72-72/1-3 นิคมอุตสาหกรรมลาดกระบัง"}, {"name": "บริษัท เอดีอี โซลูชั่น  จำกัด", "address": "888/108 หมู่ 3 ถ.สุขุมวิท  ต.บางปูใหม่"}, {"name": "บริษัท มัลติเทค ฟู๊ด  แมนูแฟคเจอริ่ง  จำกัด", "address": "789  หมู่ 2  ต.แพรกษาใหม่ อ.เมืองสมุทรปราการ"}];
+
+/* ============== course (โหลดจาก Firestore ตาม ?course=ID ใน URL) ============== */
+const courseId = new URLSearchParams(location.search).get('course');
+let course = null;
+let courseError = null; // 'missing' | 'nofirebase' | 'notfound' | 'error'
+
+async function loadCourse(){
+  if(!courseId){ courseError='missing'; renderHero(); render(); return; }
+  if(!fbReady || !db){ courseError='nofirebase'; renderHero(); render(); return; }
+  try{
+    const doc = await db.collection('courses').doc(courseId).get();
+    if(!doc.exists){ courseError='notfound'; renderHero(); render(); return; }
+    course = doc.data();
+    course.id = courseId;
+    renderHero();
+    render();
+  }catch(e){
+    console.warn(e);
+    courseError='error'; renderHero(); render();
+  }
+}
+
+function renderHero(){
+  const el = document.getElementById('heroInner');
+  if(!course){
+    el.innerHTML = `<div class="plate">${ICONS.info} ระบบลงทะเบียนอบรม/สัมมนา</div><h1>ไม่สามารถโหลดข้อมูลหลักสูตรได้</h1>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="plate">${ICONS.building} ชมรมอุตสาหกรรมบางปู</div>
+    <h1>${escapeHtml(course.name||'')}</h1>
+    ${course.subtitle?`<p>${escapeHtml(course.subtitle)}</p>`:''}
+    <div class="meta">
+      ${course.dateText?`<div>${ICONS.info} ${escapeHtml(course.dateText)}</div>`:''}
+      ${course.venue?`<div>${ICONS.building} ${escapeHtml(course.venue)}</div>`:''}
+      ${course.duration?`<div>${ICONS.bed} ${escapeHtml(course.duration)}</div>`:''}
+    </div>`;
+}
 
 /* ============== state ============== */
 let step = 1; // 1 member?, 2 company, 3 attendees, 4 review/submit, 5 done
@@ -377,24 +333,37 @@ function renderStepper(){
 }
 
 function priceFor(member, room){
-  // single = นอนเดี่ยว, double = นอนคู่
-  if(member){ return room==='single' ? 4900 : 4000; }
-  return room==='single' ? 5400 : 4500;
+  if(!course) return 0;
+  if(member){ return room==='single' ? Number(course.priceMemberSingle||0) : Number(course.priceMemberDouble||0); }
+  return room==='single' ? Number(course.priceNonMemberSingle||0) : Number(course.priceNonMemberDouble||0);
 }
 
 function escapeHtml(s){
-  return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 /* ============== RENDER ============== */
 function render(){
-  if(!REGISTRATION_OPEN){
-    document.getElementById('stepper').style.display='none';
-    document.getElementById('app').innerHTML = viewClosed();
+  const app=document.getElementById('app');
+  const stepperEl=document.getElementById('stepper');
+
+  if(courseError){
+    stepperEl.style.display='none';
+    app.innerHTML = viewCourseError();
     return;
   }
+  if(!course){
+    stepperEl.style.display='none';
+    app.innerHTML = `<div class="card center-card"><div class="spinner"></div><p style="color:var(--grey);">กำลังโหลดข้อมูลหลักสูตร...</p></div>`;
+    return;
+  }
+  if(course.isOpen===false){
+    stepperEl.style.display='none';
+    app.innerHTML = viewClosed();
+    return;
+  }
+
   renderStepper();
-  const app=document.getElementById('app');
   if(step===1) app.innerHTML = viewMember();
   else if(step===2) app.innerHTML = viewCompany();
   else if(step===3) app.innerHTML = viewAttendees();
@@ -403,14 +372,29 @@ function render(){
   bindEvents();
 }
 
+function viewCourseError(){
+  const msgs = {
+    missing: 'ไม่พบลิงก์หลักสูตรที่ต้องการลงทะเบียน กรุณาตรวจสอบลิงก์หรือ QR Code ที่ได้รับจากชมรมฯ อีกครั้ง',
+    nofirebase: 'ระบบยังไม่ได้เชื่อมต่อฐานข้อมูล กรุณาติดต่อผู้ดูแลระบบ',
+    notfound: 'ไม่พบหลักสูตรนี้ในระบบ อาจถูกลบหรือลิงก์ไม่ถูกต้อง กรุณาตรวจสอบกับเจ้าหน้าที่ชมรมฯ',
+    error: 'เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง'
+  };
+  return `
+  <div class="card accent-red center-card">
+    ${ICONS.warn}
+    <h2 style="color:var(--red-dark);font-size:19px;margin-bottom:8px;">ไม่สามารถเปิดหน้าลงทะเบียนได้</h2>
+    <p style="color:var(--grey);font-size:14.5px;line-height:1.7;max-width:420px;margin:0 auto;">${msgs[courseError]||msgs.error}</p>
+  </div>`;
+}
+
 function viewClosed(){
   return `
-  <div class="card" style="text-align:center;padding:44px 24px;">
-    <div style="font-size:40px;margin-bottom:10px;">🔒</div>
-    <h2 style="color:var(--navy-deep);font-size:20px;margin-bottom:8px;">ปิดรับลงทะเบียนแล้ว</h2>
-    <p style="color:#6B7C93;font-size:14.5px;line-height:1.7;max-width:420px;margin:0 auto;">
-      ขณะนี้ระบบลงทะเบียนสัมมนาสัญจรของชมรมอุตสาหกรรมบางปูได้ปิดรับลงทะเบียนแล้ว
-      ขอบคุณทุกท่านที่ให้ความสนใจ หากมีข้อสงสัยกรุณาติดต่อเจ้าหน้าที่ชมรมฯ
+  <div class="card accent-red center-card">
+    ${ICONS.lock}
+    <h2 style="color:var(--red-dark);font-size:19px;margin-bottom:8px;">ปิดรับลงทะเบียนแล้ว</h2>
+    <p style="color:var(--grey);font-size:14.5px;line-height:1.7;max-width:420px;margin:0 auto;">
+      ขณะนี้หลักสูตร/สัมมนานี้ปิดรับลงทะเบียนแล้ว ขอบคุณทุกท่านที่ให้ความสนใจ
+      หากมีข้อสงสัยกรุณาติดต่อเจ้าหน้าที่ชมรมฯ
     </p>
   </div>`;
 }
@@ -418,10 +402,10 @@ function viewClosed(){
 function viewMember(){
   return `
   <div class="card">
-    <h2><span class="tag">01</span> สถานะสมาชิก</h2>
+    <h2>${ICONS.users} สถานะสมาชิก</h2>
     <p class="sub">ท่านเป็นสมาชิกชมรมอุตสาหกรรมบางปูหรือไม่</p>
     <div class="choice-row">
-      <div class="choice-btn ${isMember===true?'sel':''}" data-val="true">✔ ใช่ ฉันเป็นสมาชิก</div>
+      <div class="choice-btn ${isMember===true?'sel':''}" data-val="true">${ICONS.check} ใช่ ฉันเป็นสมาชิก</div>
       <div class="choice-btn ${isMember===false?'sel':''}" data-val="false">— ไม่ใช่ บุคคลทั่วไป</div>
     </div>
     <div class="rate-table">
@@ -430,12 +414,13 @@ function viewMember(){
         <span></span><span>พักคู่ / ท่าน</span><span>พักเดี่ยว / ท่าน</span>
       </div>
       <div class="rate-row">
-        <span>สมาชิกชมรมฯ</span><span>4,000 บาท</span><span>4,900 บาท</span>
+        <span>สมาชิกชมรมฯ</span><span>${Number(course.priceMemberDouble||0).toLocaleString()} บาท</span><span>${Number(course.priceMemberSingle||0).toLocaleString()} บาท</span>
       </div>
       <div class="rate-row">
-        <span>บุคคลทั่วไป</span><span>4,500 บาท</span><span>5,400 บาท</span>
+        <span>บุคคลทั่วไป</span><span>${Number(course.priceNonMemberDouble||0).toLocaleString()} บาท</span><span>${Number(course.priceNonMemberSingle||0).toLocaleString()} บาท</span>
       </div>
     </div>
+    ${course.notes?`<div class="notice-box">${ICONS.info} ${escapeHtml(course.notes)}</div>`:''}
   </div>
   <div class="btnrow"><div></div><button class="btn-primary" id="next1" ${isMember===null?'disabled':''}>ถัดไป →</button></div>
   `;
@@ -445,10 +430,10 @@ function viewCompany(){
   if(isMember){
     return `
     <div class="card">
-      <h2><span class="tag">02</span> ค้นหาบริษัทของท่าน</h2>
+      <h2>${ICONS.building} ค้นหาบริษัทของท่าน</h2>
       <p class="sub">ค้นหาจากฐานข้อมูลสมาชิกชมรมฯ</p>
       <div class="field search-box">
-        <input type="text" id="companySearch" placeholder="พิมพ์ชื่อบริษัท..." value="${company.name && !company.confirmed ? escapeHtml(searchTerm||'') : (searchTerm||'')}">
+        <input type="text" id="companySearch" placeholder="พิมพ์ชื่อบริษัท..." value="${escapeHtml(searchTerm||'')}">
         <div id="searchResults"></div>
       </div>
       ${company.name ? `
@@ -466,7 +451,7 @@ function viewCompany(){
   } else {
     return `
     <div class="card">
-      <h2><span class="tag">02</span> ข้อมูลบริษัท</h2>
+      <h2>${ICONS.building} ข้อมูลบริษัท</h2>
       <p class="sub">กรอกชื่อบริษัทและที่อยู่สำหรับออกบิล</p>
       <div class="field">
         <label class="req">ชื่อบริษัท</label>
@@ -489,8 +474,8 @@ function viewAttendees(){
   const total = attendees.reduce((s,a)=>s+priceFor(isMember,a.room),0);
   return `
   <div class="card">
-    <h2><span class="tag">03</span> ${editingIndex!==null?'แก้ไขผู้เข้าร่วม':'เพิ่มผู้เข้าร่วมสัมมนา'}</h2>
-    <p class="sub">กรอกข้อมูลผู้เข้าร่วมสัมมนาทีละท่าน</p>
+    <h2>${ICONS.users} ${editingIndex!==null?'แก้ไขผู้เข้าร่วม':'เพิ่มผู้เข้าร่วม'}</h2>
+    <p class="sub">กรอกข้อมูลผู้เข้าร่วมทีละท่าน</p>
     <div class="grid2">
       <div class="field"><label class="req">ชื่อ-สกุล</label><input type="text" id="f_fullname" value="${escapeHtml(draft.fullname)}"></div>
       <div class="field"><label>ชื่อเล่น</label><input type="text" id="f_nickname" value="${escapeHtml(draft.nickname)}"></div>
@@ -503,20 +488,20 @@ function viewAttendees(){
     <div class="field">
       <label class="req">ประเภทห้องพัก</label>
       <div class="choice-row">
-        <div class="choice-btn ${draft.room==='single'?'sel':''}" data-room="single">ห้องพักเดี่ยว</div>
-        <div class="choice-btn ${draft.room==='double'?'sel':''}" data-room="double">ห้องพักคู่</div>
+        <div class="choice-btn ${draft.room==='single'?'sel':''}" data-room="single">${ICONS.bed} ห้องพักเดี่ยว</div>
+        <div class="choice-btn ${draft.room==='double'?'sel':''}" data-room="double">${ICONS.bed} ห้องพักคู่</div>
       </div>
-      <div class="hint">กรณีเข้าสัมมนาท่านเดียวและเลือกห้องพักคู่ คณะกรรมการจะเป็นผู้จัดคู่ห้องพักให้</div>
+      <div class="hint">กรณีเข้าร่วมท่านเดียวและเลือกห้องพักคู่ คณะกรรมการจะเป็นผู้จัดคู่ห้องพักให้</div>
     </div>
     <div class="field">
       <label class="req">การเดินทาง</label>
       <div class="choice-row">
-        <div class="choice-btn ${draft.travel==='bus'?'sel':''}" data-travel="bus">🚌 ร่วมเดินทางโดยรถบัสที่ชมรมฯ จัดให้</div>
-        <div class="choice-btn ${draft.travel==='own'?'sel':''}" data-travel="own">🚗 เดินทางโดยพาหนะส่วนตัว</div>
+        <div class="choice-btn ${draft.travel==='bus'?'sel':''}" data-travel="bus">${ICONS.bus} ร่วมเดินทางโดยรถบัสที่ชมรมฯ จัดให้</div>
+        <div class="choice-btn ${draft.travel==='own'?'sel':''}" data-travel="own">${ICONS.car} เดินทางโดยพาหนะส่วนตัว</div>
       </div>
     </div>
     <div class="field">
-      <label>ข้อมูลด้านอาหาร</label>
+      <label>${ICONS.food} ข้อมูลด้านอาหาร</label>
       <div class="food-grid">
         ${FOOD_OPTS.map(o=>`
           <label class="check-item ${draft.food.includes(o.k)?'checked':''}">
@@ -527,13 +512,13 @@ function viewAttendees(){
     </div>
     <div class="price-note">ค่าลงทะเบียนท่านนี้: <b>${priceFor(isMember,draft.room).toLocaleString()} บาท/ท่าน</b> — อัตรา${isMember?'สมาชิกชมรมฯ':'บุคคลทั่วไป'} ${draft.room==='single'?'พักเดี่ยว':'พักคู่'}</div>
     <div style="margin-top:18px;">
-      <button class="btn-amber" id="saveAttendee" style="width:100%;">${editingIndex!==null?'บันทึกการแก้ไข':'+ เพิ่มผู้เข้าร่วมท่านนี้'}</button>
+      <button class="btn-success" id="saveAttendee" style="width:100%;">${editingIndex!==null?'บันทึกการแก้ไข':'+ เพิ่มผู้เข้าร่วมท่านนี้'}</button>
     </div>
   </div>
 
   ${attendees.length ? `
-  <div class="card">
-    <h2 style="font-size:15px;">รายชื่อผู้เข้าร่วมที่เพิ่มแล้ว (${attendees.length})</h2>
+  <div class="card accent-green">
+    <h2 style="font-size:15px;">${ICONS.check} รายชื่อผู้เข้าร่วมที่เพิ่มแล้ว (${attendees.length})</h2>
     ${attendees.map((a,i)=>`
       <div class="attendee-item">
         <div>
@@ -558,18 +543,18 @@ function viewReview(){
   const total = attendees.reduce((s,a)=>s+priceFor(isMember,a.room),0);
   return `
   <div class="card">
-    <h2><span class="tag">04</span> ตรวจสอบข้อมูลก่อนส่ง</h2>
+    <h2>${ICONS.check} ตรวจสอบข้อมูลก่อนส่ง</h2>
     <p class="sub">กรุณาตรวจสอบความถูกต้องก่อนยืนยันการลงทะเบียน</p>
 
     <div class="review-block">
-      <h3>สถานะ &amp; บริษัท</h3>
+      <h3>${ICONS.building} สถานะ &amp; บริษัท</h3>
       <div class="review-row"><span>สถานะ</span><span>${isMember?'สมาชิกชมรมฯ':'บุคคลทั่วไป'}</span></div>
       <div class="review-row"><span>ชื่อบริษัท</span><span>${escapeHtml(company.name)}</span></div>
       <div class="review-row"><span>ที่อยู่ออกบิล</span><span>${escapeHtml(company.address)}${company.edited?' <span class="flag-edited">แก้ไขแล้ว</span>':''}</span></div>
     </div>
 
     <div class="review-block">
-      <h3>ผู้เข้าร่วมสัมมนา (${attendees.length} ท่าน)</h3>
+      <h3>${ICONS.users} ผู้เข้าร่วม (${attendees.length} ท่าน)</h3>
       ${attendees.map(a=>`
         <div class="review-attendee">
           <div class="review-row"><span>ชื่อ-สกุล</span><span>${escapeHtml(a.fullname)} ${a.nickname?`(${escapeHtml(a.nickname)})`:''}</span></div>
@@ -580,13 +565,13 @@ function viewReview(){
           <div class="review-row"><span>อาหาร</span><span>${a.food.map(k=>FOOD_OPTS.find(o=>o.k===k).label).join(', ')||'ไม่มีข้อกำหนด'}${a.allergyNote?' · แพ้: '+escapeHtml(a.allergyNote):''}</span></div>
           <div class="review-row"><span>ค่าลงทะเบียน</span><span>${priceFor(isMember,a.room).toLocaleString()} บาท/ท่าน</span></div>
         </div>`).join('')}
-      <div class="review-row" style="border-top:2px solid var(--navy);padding-top:10px;"><span><b>รวมทั้งสิ้น</b></span><span><b>${total.toLocaleString()} บาท</b></span></div>
+      <div class="review-row" style="border-top:2px solid var(--blue);padding-top:10px;"><span><b>รวมทั้งสิ้น</b></span><span><b>${total.toLocaleString()} บาท</b></span></div>
     </div>
 
     <div class="pdpa-box">
       <label>
         <input type="checkbox" id="pdpaCheck" ${pdpaChecked?'checked':''}>
-        <span>ข้าพเจ้ายินยอมให้ชมรมอุตสาหกรรมบางปูเก็บ ใช้ และประมวลผลข้อมูลส่วนบุคคลที่ให้ไว้ข้างต้น เพื่อวัตถุประสงค์ในการจัดสัมมนาครั้งนี้เท่านั้น (PDPA)</span>
+        <span>ข้าพเจ้ายินยอมให้ชมรมอุตสาหกรรมบางปูเก็บ ใช้ และประมวลผลข้อมูลส่วนบุคคลที่ให้ไว้ข้างต้น เพื่อวัตถุประสงค์ในการจัดอบรม/สัมมนาครั้งนี้เท่านั้น (PDPA)</span>
       </label>
     </div>
   </div>
@@ -598,10 +583,10 @@ function viewReview(){
 
 function viewSuccess(){
   return `
-  <div class="card success">
-    <div class="seal">✓</div>
+  <div class="card accent-green success">
+    <div class="seal">${ICONS.check}</div>
     <h2>ลงทะเบียนสำเร็จ</h2>
-    <p style="color:#7A7363;">ขอบคุณที่ลงทะเบียนเข้าร่วมสัมมนาสัญจรกับชมรมอุตสาหกรรมบางปู เจ้าหน้าที่จะติดต่อยืนยันรายละเอียดอีกครั้งทางอีเมล/โทรศัพท์</p>
+    <p style="color:var(--grey);">ขอบคุณที่ลงทะเบียนเข้าร่วม เจ้าหน้าที่จะติดต่อยืนยันรายละเอียดอีกครั้งทางอีเมล/โทรศัพท์ ระบบได้ส่งอีเมลยืนยันข้อมูลให้ผู้เข้าร่วมทุกท่านแล้ว</p>
     <div class="regid">เลขที่ลงทะเบียน ${lastRegId}</div>
     <div style="margin-top:26px;">
       <button class="btn-primary" id="newReg">ลงทะเบียนรายการใหม่</button>
@@ -622,10 +607,7 @@ function bindEvents(){
     document.getElementById('back2').onclick=()=>{ step=1; render(); };
     if(isMember){
       const inp=document.getElementById('companySearch');
-      inp.oninput=(e)=>{
-        searchTerm=e.target.value;
-        renderSearchResults(searchTerm);
-      };
+      inp.oninput=(e)=>{ searchTerm=e.target.value; renderSearchResults(searchTerm); };
       inp.onfocus=()=>renderSearchResults(searchTerm);
       const addr=document.getElementById('companyAddr');
       if(addr) addr.oninput=(e)=>{
@@ -672,9 +654,7 @@ function bindEvents(){
       if(!draft.fullname.trim() || !draft.position.trim() || !draft.phone.trim() || !draft.email.trim()){
         toast('กรุณากรอกข้อมูลที่จำเป็น (มีเครื่องหมาย *) ให้ครบถ้วน'); return;
       }
-      if(!draft.travel){
-        toast('กรุณาเลือกวิธีการเดินทาง'); return;
-      }
+      if(!draft.travel){ toast('กรุณาเลือกวิธีการเดินทาง'); return; }
       if(editingIndex!==null){ attendees[editingIndex]={...draft}; editingIndex=null; }
       else { attendees.push({...draft}); }
       draft = blankAttendee();
@@ -732,31 +712,34 @@ function genRegId(){
   const d=new Date();
   const stamp = d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
   const rnd = Math.floor(Math.random()*9000+1000);
-  return 'BIS-'+stamp+'-'+rnd;
+  return 'REG-'+stamp+'-'+rnd;
 }
 
 function submitRegistration(){
   const regId = genRegId();
   const payload = {
-    regId, submittedAt: new Date().toISOString(),
+    regId, courseId: course.id, courseName: course.name, submittedAt: new Date().toISOString(),
     isMember, company, attendees,
     total: attendees.reduce((s,a)=>s+priceFor(isMember,a.room),0)
   };
 
   // เก็บสำเนาไว้ในเครื่อง (fallback กรณีไม่มีอินเทอร์เน็ต/Firebase ยังไม่พร้อม)
   try{
-    const all = JSON.parse(localStorage.getItem('bis_registrations')||'[]');
+    const key = 'reg_backup_'+course.id;
+    const all = JSON.parse(localStorage.getItem(key)||'[]');
     all.push(payload);
-    localStorage.setItem('bis_registrations', JSON.stringify(all));
+    localStorage.setItem(key, JSON.stringify(all));
   }catch(e){}
 
-  // เขียนข้อมูลเข้า Firestore แบบ realtime — ทุกคนที่กรอกฟอร์มจะเข้ามารวมที่ฐานข้อมูลเดียวกัน
+  // เขียนข้อมูลเข้า Firestore แบบ realtime แยกตามหลักสูตร (courses/{courseId}/registrations/{regId})
   if(fbReady && db){
-    db.collection('registrations').doc(regId).set(payload)
+    db.collection('courses').doc(course.id).collection('registrations').doc(regId).set(payload)
       .catch(err=>console.warn('บันทึกขึ้น Firestore ไม่สำเร็จ (ข้อมูลยังอยู่ในเครื่องนี้):', err));
   } else {
     console.warn('ยังไม่ได้ตั้งค่า Firebase — ข้อมูลถูกบันทึกไว้เฉพาะในเครื่องนี้เท่านั้น ดู SETUP.md');
   }
+
+  sendConfirmationEmails(payload);
 
   lastRegId = regId;
   step = 5;
@@ -764,68 +747,47 @@ function submitRegistration(){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-/* ============== ADMIN: เข้าสู่ระบบ + นำออกข้อมูลจาก Firestore ============== */
-function openAdmin(){
-  document.getElementById('adminModal').classList.add('show');
-  document.getElementById('adminErr').textContent='';
-}
-function closeAdmin(){
-  document.getElementById('adminModal').classList.remove('show');
-  document.getElementById('adminErr').textContent='';
-  document.getElementById('adminEmail').value='';
-  document.getElementById('adminPass').value='';
+/* ============== EMAIL CONFIRMATION (EmailJS) ==============
+   ส่งอีเมลยืนยันให้ผู้เข้าร่วมทุกท่าน แสดงข้อมูลที่กรอกย้อนกลับไป
+   ต้องตั้งค่า EMAILJS_CONFIG ด้านบนก่อน (ดู SETUP.md) — ถ้ายังไม่ตั้งค่า ระบบจะข้ามการส่งอีเมลโดยไม่กระทบการลงทะเบียน
+*/
+function buildSummaryText(payload, a){
+  return [
+    `หลักสูตร/สัมมนา: ${payload.courseName}`,
+    `เลขที่ลงทะเบียน: ${payload.regId}`,
+    `บริษัท: ${payload.company.name}`,
+    `ชื่อ-สกุล: ${a.fullname}${a.nickname?' ('+a.nickname+')':''}`,
+    `ตำแหน่ง: ${a.position}`,
+    `เบอร์โทร: ${a.phone}`,
+    `อีเมล: ${a.email}`,
+    `ห้องพัก: ${a.room==='single'?'พักเดี่ยว':'พักคู่'}`,
+    `การเดินทาง: ${a.travel==='bus'?'รถบัสที่ชมรมฯ จัดให้':'พาหนะส่วนตัว'}`,
+    `ข้อมูลอาหาร: ${(a.food||[]).map(k=>FOOD_OPTS.find(o=>o.k===k).label).join(', ')||'ไม่มีข้อกำหนด'}${a.allergyNote?' / แพ้: '+a.allergyNote:''}`,
+    `ค่าลงทะเบียน: ${priceFor(payload.isMember,a.room).toLocaleString()} บาท`
+  ].join('\n');
 }
 
-async function doAdminLogin(){
-  const errEl = document.getElementById('adminErr');
-  errEl.textContent='';
-  if(!fbReady || !auth){
-    errEl.textContent = 'ยังไม่ได้ตั้งค่า Firebase ในหน้าเว็บนี้ (ดู SETUP.md)';
-    return;
-  }
-  const email = document.getElementById('adminEmail').value.trim();
-  const pass = document.getElementById('adminPass').value;
-  if(!email || !pass){ errEl.textContent='กรุณากรอกอีเมลและรหัสผ่าน'; return; }
-
-  const btn = document.getElementById('adminLoginBtn');
-  btn.disabled = true; btn.textContent='กำลังเข้าสู่ระบบ...';
-  try{
-    await auth.signInWithEmailAndPassword(email, pass);
-    await exportFromFirestore();
-    closeAdmin();
-    await auth.signOut(); // ออกจากระบบทันทีหลังดาวน์โหลด เพื่อความปลอดภัย
-  }catch(e){
-    errEl.textContent = 'เข้าสู่ระบบไม่สำเร็จ: อีเมลหรือรหัสผ่านไม่ถูกต้อง';
-    console.warn(e);
-  }finally{
-    btn.disabled = false; btn.textContent='เข้าสู่ระบบ';
+async function sendConfirmationEmails(payload){
+  if(!emailjsReady){ console.warn('EmailJS ยังไม่ได้ตั้งค่า — ข้ามการส่งอีเมลยืนยัน (ดู SETUP.md)'); return; }
+  for(const a of payload.attendees){
+    if(!a.email) continue;
+    try{
+      await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, {
+        to_email: a.email,
+        to_name: a.fullname,
+        course_name: payload.courseName,
+        reg_id: payload.regId,
+        summary: buildSummaryText(payload, a)
+      });
+    }catch(e){ console.warn('ส่งอีเมลยืนยันไม่สำเร็จสำหรับ', a.email, e); }
   }
 }
 
-async function exportFromFirestore(){
-  const snap = await db.collection('registrations').get();
-  if(snap.empty){ toast('ยังไม่มีข้อมูลผู้ลงทะเบียนใน Firestore'); return; }
-  const rows = [['เลขที่ลงทะเบียน','วันที่ส่ง','สถานะ','บริษัท','ที่อยู่ออกบิล','แก้ไขที่อยู่','ชื่อ-สกุล','ชื่อเล่น','ตำแหน่ง','เบอร์โทร','อีเมล','ห้องพัก','การเดินทาง','อาหาร','แพ้อาหาร','ค่าลงทะเบียน(บาท)']];
-  snap.forEach(doc=>{
-    const r = doc.data();
-    (r.attendees||[]).forEach(a=>{
-      rows.push([
-        r.regId, r.submittedAt, r.isMember?'สมาชิก':'บุคคลทั่วไป', r.company.name, r.company.address,
-        r.company.edited?'ใช่':'ไม่', a.fullname, a.nickname, a.position, `="${a.phone}"`, a.email,
-        a.room==='single'?'เดี่ยว':'คู่', a.travel==='bus'?'รถบัสชมรมฯ':'พาหนะส่วนตัว', (a.food||[]).join('/'), a.allergyNote,
-        priceFor(r.isMember,a.room)
-      ]);
-    });
-  });
-  const csv = '\uFEFF'+rows.map(row=>row.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
-  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href=url; a.download=`BIS_registrations_${Date.now()}.csv`;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  toast(`ดาวน์โหลด CSV แล้ว (${snap.size} รายการลงทะเบียน)`);
-}
+/* ============== ปุ่ม "สำหรับเจ้าหน้าที่" ที่ footer ============== */
+function openAdmin(){ document.getElementById('adminModal').classList.add('show'); }
+function closeAdmin(){ document.getElementById('adminModal').classList.remove('show'); }
 
+loadCourse();
 render();
 </script>
 </body>
